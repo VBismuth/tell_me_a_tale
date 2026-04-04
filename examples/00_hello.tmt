@@ -3,15 +3,15 @@
 -(  And this is a multiline comment,
     all comments will be skipped )-
 
--- Funtion definition with a "this is a tale [of kind <kind>] about <name>"
-This is a tale about Hello World. -- Note as every code block must be terminated with a dot
+-- Funtion definition with a 'this is a tale [of kind <kind>] about "<name>"'
+This is a tale "Hello World". -- Note as every code block must be terminated with . or ;
 
  -( Function body within "so it begins" and "the end"
     Whatever strings will be ignored, if they are not keywords or keyword arguments
  -- "Say" keyword prints next arg to the terminal with a dot and newline appended
-So it begins, when I asked the storytaler to say Hello, World.
+So it begins, when I asked the storyteller to say "Hello, World!".
 And they actually said it. -- No keywords, this will be skipped by interpreter
 The end.
 
  -- Function call
-Tell me a tale Hello World.
+Tell me a tale "Hello World".

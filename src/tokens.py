@@ -21,6 +21,7 @@ class TokenType(Enum):
     KEYWORD = iota()
     MATH = iota()
     STRING = iota()
+    TERMINATOR = iota()
 
     COUNT = iota()
 
