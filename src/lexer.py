@@ -12,7 +12,7 @@ keywords = ('this is a tale', 'of kind', 'string', 'number', 'boolean', 'none',
             'about', 'in which', 'is',
             )
 
-assert TT.COUNT.value == 6, "Nonexhaustive token handle"
+assert TT.COUNT.value == 7, "Nonexhaustive token handle"
 token_patterns = {
     'COMMENT':    r'(?:-\([\s\S]*?\)-)|(?:--[^\n]*)',
     'NAME':       r'\"[^\n]*?\"',
@@ -34,16 +34,17 @@ class Text:
     txt_idx: int = 0
     filename: str = '<string>'
 
+    # FIXME: strange pos of ~500 at idx 290
     def get_pos(self, idx: int = 0) -> tuple[int, int]:
         """ Gets text pos by index """
-        if r'\n' in self.text:
-            # FIXME: wrong line count
-            line: int = max(
-                self.text.count(r'\n', 0, idx + 1), 1)
-            col: int = idx - self.text.rfind(r'\n', 0, idx + 1)
+        if '\n' in self.text[self.txt_idx:idx]:
+            line: int = self.current_pos.line + max(
+                self.text.count('\n', self.txt_idx, idx), 1)
+            col: int = max(
+                idx - 1 - self.text.rfind('\n', self.txt_idx, idx), 1)
         else:
-            line: int = 1
-            col: int = 1 + idx
+            line: int = self.current_pos.line
+            col: int = max(self.current_pos.column + idx - 1, 1)
         return (line, col)
 
     def set_pos(self, idx: int = 0) -> None:
@@ -57,7 +58,6 @@ class Text:
 def tokenize(text: Text, pattern: str = PARSE_PTRN) -> Token:
     """ Token generator from text """
     for match in re.finditer(pattern, text.text, re.IGNORECASE):
-        # TODO: real match group
         tokenname: str = match.lastgroup
         body: str = match.group(tokenname)
         idx_start, idx_end = match.span(tokenname)

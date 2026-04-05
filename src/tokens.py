@@ -19,8 +19,9 @@ class TokenType(Enum):
     NONE = 0
     COMMENT = iota()
     KEYWORD = iota()
-    MATH = iota()
     STRING = iota()
+    NAME = iota()
+    MATH = iota()
     TERMINATOR = iota()
 
     COUNT = iota()
