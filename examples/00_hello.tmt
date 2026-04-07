@@ -1,15 +1,15 @@
 --- Hello World example in Tell Me a Tale ---
 --  This is a comment, previous line is also a one line comment
--(  And this is a multiline comment,
+-(  And this is a multiline comment;
     all comments will be skipped )-
 
--- Funtion definition with a 'this is a tale [of kind <kind>] about "<name>"'
+-- Function definition starts with a 'this is a tale [of kind <kind>] about "<name>"'
 This is a tale "Hello World". -- Note as every code block must be terminated with . or ;
 
  -( Function body within "so it begins" and "the end"
     Whatever strings will be ignored, if they are not keywords or keyword arguments
- -- "Say" keyword prints next arg to the terminal with a dot and newline appended
-So it begins, when I asked the storyteller to say "Hello, World!".
+ -- "Say" keyword prints next arg to the terminal with a newline appended
+So it begins, when I asked the storyteller to say Hello, World!.
 And they actually said it. -- No keywords, this will be skipped by interpreter
 The end.
 

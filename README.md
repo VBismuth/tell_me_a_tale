@@ -1,6 +1,8 @@
 # Tell Me a Tale
 A small programming language designed to be read like a story
+
 ___
+
 ## The vision behind the language
 I see you've stumbled upon this repository of my story-like language.
 The idea of this language came to me suddenly --- I wanted to create a programming language that looks like a average story.

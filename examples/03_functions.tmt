@@ -1,0 +1,17 @@
+--- Functions ---
+
+This is a tale "Greet" in which "Name" of kind string,
+So it begins,
+    Say `Hello, ` and the meaning of "Name".
+The end.
+
+Tell me a tale "Greet" with "Victor". -- Output: Hello, Victor.
+
+This is a tale of kind number=int about "Add" in which "A" of kind number=int, "B" of kind number=int.
+So it begins.
+    Let us know _$"A" + $"B"_.
+The end.
+
+That is "Result" of kind number=int.
+Tell me a tale "Add" with _420_, _240_ for "Result".
+Tell me the meaning of "Result".

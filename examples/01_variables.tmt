@@ -1,0 +1,26 @@
+--- Variables ---
+
+-- There aliases to name types or make custom types
+Alias number=i32 to int.
+
+-- Math expressions wrapped in a _<expr>_; And by default number is 32bit float
+There is a "Expression" of kind number that is _42 * (sin(pi/2) - 3)_.
+Say the meaning of "Expression".  -- Prints "-84.0"
+
+-- Constant cannot be changed later.
+There is a constant "Constant" of kind int that is _42_.
+Tell me the meaning of "Constant"  -- same as say, but without newline
+Say nothing.  -- Just prints newline, nothing is like None in pyhton
+
+-- "There is a" and "there was a" both are keywords to define a variable
+Once there was a "Boolean" of kind boolean that is true.
+
+-- Text in `` is treated like string no matter what inside
+There was a "String" of kind string that is `true`.
+-- "... of kind string that is true." --- implicit cast boolean to string
+
+Then "Expression" became _$.Constant. + 27_.
+Tell me `Expression = $.Expression..\n`  -- Prints "69.0"
+
+Then "Expression" became _$.Expression. + 1.1_.  -- 70.1
+Say the meaning of "Expression" as int.  -- Prints "70"

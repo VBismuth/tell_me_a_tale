@@ -1,7 +1,0 @@
---- Working with user input ---
-There is a Number Input of kind number that should listen to me.
-There is a Message Input that should listen to me.
-
--- Printing it
-Say "Number Input:" Number Input.
-Say "Message Input:" Message Input.
