@@ -20,26 +20,37 @@
 import re
 from dataclasses import dataclass
 
-from tokens import TokenType as TT, Token, Pos
+from tokens import TokenType, Token, Pos
 
 # TODO: if common keyword used outside of context, like 'about' outside
 # of 'tell me' then it should be connected to string
-keywords = ('this is a tale', 'of kind', 'string', 'number', 'boolean', 'none',
-            'about', 'in which', 'is',
-            )
+keywords = (
+    'this is', 'a tale', 'an actor', 'a constant', 'a pointer', 'a list',
+    'a dict', 'of kind', 'string', 'number', 'boolean', 'none', 'for',
+    'about', 'in which', 'that is', 'then', 'become', 'and', 'or', 'not',
+    'say', 'tell me', 'telling me', 'the meaning of', 'should listen to me',
+    'if', 'then', 'otherwise', 'else', 'and that\'s it', 'equals', 'equal',
+    'while', 'do', 'until', 'repeat', 'so it begins', 'the end',
+    'alias', 'as', 'cast', 'append book', 'visit library', 'from',
+    'there was', 'there is',
+)
 
-assert TT.COUNT.value == 7, "Nonexhaustive token handle"
+# TODO: add types as tokens, like TOKEN NUMBER: i32 from number=i32
+# TODO: meta keywords like @LINKER -l:raylib.a
+assert TokenType.COUNT.value == 7, "Nonexhaustive token handle"
 token_patterns = {
     'COMMENT':    r'(?:-\([\s\S]*?\)-)|(?:--[^\n]*)',
-    'NAME':       r'\"[^\n]*?\"',
-    'TERMINATOR': r'[.;]',
+    'IDENTIFIER': r'\"[^\n]*?\"',
+    'STRING':     r'`[\s\S]*?`',
+    'EXPRESSION': r'_[^\n]*?_',
     'KEYWORD':    r'|'.join(keywords),
-    # TODO: MATH
+    'TERMINATOR': r'[.;]',
+    'COLON':      ',',
 }
 
-PARSE_PTRN: str = '|'.join(f'(?P<{name}>{ptrn})'
-                           for name, ptrn in
-                           token_patterns.items())
+MULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'
+                             for name, ptrn in
+                             token_patterns.items())
 
 
 @dataclass
@@ -53,11 +64,11 @@ class Text:
     # FIXME: strange pos of ~500 at idx 290
     def get_pos(self, idx: int = 0) -> tuple[int, int]:
         """ Gets text pos by index """
-        if '\n' in self.text[self.txt_idx:idx]:
+        if '\n' in self.text[:idx + 1]:
             line: int = self.current_pos.line + max(
-                self.text.count('\n', self.txt_idx, idx), 1)
+                self.text.count('\n', 0, idx + 1), 1)
             col: int = max(
-                idx - 1 - self.text.rfind('\n', self.txt_idx, idx), 1)
+                idx - 1 - self.text.rfind('\n', 0, idx), 1)
         else:
             line: int = self.current_pos.line
             col: int = max(self.current_pos.column + idx - 1, 1)
@@ -71,7 +82,7 @@ class Text:
         self.current_pos.column = col
 
 
-def tokenize(text: Text, pattern: str = PARSE_PTRN) -> Token:
+def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Token:
     """ Token generator from text """
     for match in re.finditer(pattern, text.text, re.IGNORECASE):
         tokenname: str = match.lastgroup
@@ -86,5 +97,5 @@ def tokenize(text: Text, pattern: str = PARSE_PTRN) -> Token:
             end_pos=pos_end,
             filename=text.filename,
             body=body,
-            type_=getattr(TT, tokenname) or TT.NONE
+            type_=getattr(TokenType, tokenname) or TokenType.NONE
         )

@@ -34,11 +34,12 @@ class TokenType(Enum):
     """ Tokey type """
     NONE = 0
     COMMENT = iota()
-    KEYWORD = iota()
+    IDENTIFIER = iota()
     STRING = iota()
-    NAME = iota()
-    MATH = iota()
+    EXPRESSION = iota()
+    KEYWORD = iota()
     TERMINATOR = iota()
+    COLON = iota()
 
     COUNT = iota()
 
