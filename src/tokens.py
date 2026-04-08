@@ -35,6 +35,7 @@ class TokenType(Enum):
     NONE = 0
     COMMENT = iota()
     IDENTIFIER = iota()
+    TYPES = iota()
     STRING = iota()
     EXPRESSION = iota()
     KEYWORD = iota()

@@ -26,25 +26,28 @@ from tokens import TokenType, Token, Pos
 # of 'tell me' then it should be connected to string
 keywords = (
     'this is', 'a tale', 'an actor', 'a constant', 'a pointer', 'a list',
-    'a dict', 'of kind', 'string', 'number', 'boolean', 'none', 'for',
+    'a dict', 'of kind', 'of type', 'there was', 'there is', 'for',
     'about', 'in which', 'that is', 'then', 'become', 'and', 'or', 'not',
     'say', 'tell me', 'telling me', 'the meaning of', 'should listen to me',
     'if', 'then', 'otherwise', 'else', 'and that\'s it', 'equals', 'equal',
     'while', 'do', 'until', 'repeat', 'so it begins', 'the end',
     'alias', 'as', 'cast', 'append book', 'visit library', 'from',
-    'there was', 'there is',
 )
 
-# TODO: add types as tokens, like TOKEN NUMBER: i32 from number=i32
+types = (
+    'number', 'string', 'boolean', 'none',
+)
+
 # TODO: meta keywords like @LINKER -l:raylib.a
-assert TokenType.COUNT.value == 7, "Nonexhaustive token handle"
+assert TokenType.COUNT.value == 9, "Nonexhaustive token handle"
 token_patterns = {
     'COMMENT':    r'(?:-\([\s\S]*?\)-)|(?:--[^\n]*)',
     'IDENTIFIER': r'\"[^\n]*?\"',
     'STRING':     r'`[\s\S]*?`',
+    'TYPES':      '(?:' + '|'.join(types) + r')(?:=[\w]+)?',
     'EXPRESSION': r'_[^\n]*?_',
-    'KEYWORD':    r'|'.join(keywords),
-    'TERMINATOR': r'[.;]',
+    'KEYWORD':    '|'.join(keywords),
+    'TERMINATOR': '[.;]',
     'COLON':      ',',
 }
 
