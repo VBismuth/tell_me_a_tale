@@ -7,7 +7,7 @@
 This is a tale "Hello World". -- Note as every code block must be terminated with . or ;
 
  -( Function body within "so it begins" and "the end"
-    Whatever strings will be ignored, if they are not keywords or keyword arguments
+    Whatever strings will be ignored, if they are not keywords or keyword arguments )-
  -- "Say" keyword prints next arg to the terminal with a newline appended
 So it begins, when I asked the storyteller to say Hello, World!.
 And they actually said it. -- No keywords, this will be skipped by interpreter

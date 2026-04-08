@@ -32,17 +32,18 @@ class Pos:
 
 class TokenType(Enum):
     """ Tokey type """
-    NONE = 0
-    COMMENT = iota()
-    IDENTIFIER = iota()
-    TYPES = iota()
-    STRING = iota()
-    EXPRESSION = iota()
-    KEYWORD = iota()
-    TERMINATOR = iota()
-    COLON = iota()
+    NONE        = 0
+    COMMENT     = iota()
+    IDENTIFIER  = iota()
+    TYPES       = iota()
+    STRING      = iota()
+    EXPRESSION  = iota()
+    KEYWORD     = iota()
+    TERMINATOR  = iota()
+    COLON       = iota()
+    WORD        = iota()
 
-    COUNT = iota()
+    COUNT       = iota()
 
 
 @dataclass
@@ -59,5 +60,5 @@ class Token:
             return "[NONE]"
         if self.type_ == TokenType.COUNT:
             return "[NOT A TOKEN]"
-        return (f"[{self.type_.name}:{self.body[:30]}" + '<...>]'
-                if len(self.body) >= 30 else ']')
+        return (f"[{self.type_.name}:{self.body[:30]}" + ('<...>]'
+                if len(self.body) >= 30 else ']'))

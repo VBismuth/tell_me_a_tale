@@ -26,12 +26,12 @@ from tokens import TokenType, Token, Pos
 # of 'tell me' then it should be connected to string
 keywords = (
     'this is', 'a tale', 'an actor', 'a constant', 'a pointer', 'a list',
-    'a dict', 'of kind', 'of type', 'there was', 'there is', 'for',
-    'about', 'in which', 'that is', 'then', 'become', 'and', 'or', 'not',
-    'say', 'tell me', 'telling me', 'the meaning of', 'should listen to me',
-    'if', 'then', 'otherwise', 'else', 'and that\'s it', 'equals', 'equal',
-    'while', 'do', 'until', 'repeat', 'so it begins', 'the end',
-    'alias', 'as', 'cast', 'append book', 'visit library', 'from',
+    'a dict', 'of kind', 'of type', 'there was', 'there is', 'for ',
+    'about', 'in which', 'that is', 'become', 'and ', 'or ', 'not ',
+    'say ', 'tell me', 'telling me', 'the meaning of', 'should listen to me',
+    'if ', 'then ', 'otherwise', 'else', 'and that\'s it', 'equals', 'equal',
+    'while', 'do ', 'until', 'repeat', 'so it begins', 'the end',
+    'alias', 'as ', 'cast', 'append book', 'visit library', 'from ',
 )
 
 types = (
@@ -39,7 +39,7 @@ types = (
 )
 
 # TODO: meta keywords like @LINKER -l:raylib.a
-assert TokenType.COUNT.value == 9, "Nonexhaustive token handle"
+assert TokenType.COUNT.value == 10, "Nonexhaustive token handle"
 token_patterns = {
     'COMMENT':    r'(?:-\([\s\S]*?\)-)|(?:--[^\n]*)',
     'IDENTIFIER': r'\"[^\n]*?\"',
@@ -49,6 +49,7 @@ token_patterns = {
     'KEYWORD':    '|'.join(keywords),
     'TERMINATOR': '[.;]',
     'COLON':      ',',
+    'WORD':       r'[\w]+'
 }
 
 MULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'
@@ -64,14 +65,16 @@ class Text:
     txt_idx: int = 0
     filename: str = '<string>'
 
-    # FIXME: strange pos of ~500 at idx 290
+    # FIXME: get pos need to be rewritten
     def get_pos(self, idx: int = 0) -> tuple[int, int]:
         """ Gets text pos by index """
-        if '\n' in self.text[:idx + 1]:
-            line: int = self.current_pos.line + max(
-                self.text.count('\n', 0, idx + 1), 1)
+        c_idx: int = 0 if idx <= self.txt_idx else self.txt_idx
+        chunk: str = self.text[c_idx:idx + 1]
+        if '\n' in chunk:
+            line: int = (self.current_pos.line if c_idx else 0) + max(
+                self.text.count('\n', c_idx, idx), 1)
             col: int = max(
-                idx - 1 - self.text.rfind('\n', 0, idx), 1)
+                idx - 1 - self.text.rfind('\n', c_idx, idx), 1)
         else:
             line: int = self.current_pos.line
             col: int = max(self.current_pos.column + idx - 1, 1)
@@ -83,6 +86,12 @@ class Text:
         self.txt_idx = idx
         self.current_pos.line = line
         self.current_pos.column = col
+
+    def get_line(self, line_n: int = 1) -> str:
+        """ Get line from text """
+        if not self.text:
+            return ''
+        return self.text.split('\n')[max(line_n - 1, 0)]
 
 
 def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Token:
