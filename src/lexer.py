@@ -19,6 +19,7 @@
 
 import re
 from dataclasses import dataclass
+from typing import Generator
 
 from .tokens import TokenType, Token, Pos
 
@@ -73,7 +74,7 @@ class Text:
             line = 1
             col = 1
         else:
-            pointer: int = self.current_pos.index
+            pointer = self.current_pos.index
         line += self.text.count('\n', pointer, idx)
         if line == self.current_pos.line:
             col += max(idx - pointer, 0)
@@ -95,10 +96,10 @@ class Text:
         return self.text.split('\n')[max(line_n - 1, 0)]
 
 
-def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Token:
+def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Generator[Token]:
     """ Token generator from text """
     for match in re.finditer(pattern, text.text, re.IGNORECASE):
-        tokenname: str = match.lastgroup
+        tokenname: str = match.lastgroup or 'NONE'
         body: str = match.group(tokenname)
         idx_start, idx_end = match.span(tokenname)
         pos_start: Pos = Pos(*text.get_pos(idx_start), idx_start)

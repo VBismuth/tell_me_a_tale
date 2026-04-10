@@ -42,7 +42,7 @@ def error_message(start_pos: Pos, end_pos: Pos,
     if end_pos.line == start_pos.line:
         arrows_size: int = max(end_pos.column - start_pos.column, 1)
     else:
-        arrows_size: int = len(text_part) - start_pos.column
+        arrows_size = len(text_part) - start_pos.column
     print_arrows(start_pos.column - 1 + len(start_pos_num), arrows_size)
 
     print(f'{text.filename}:{start_pos.line}:{start_pos.column}  {message}')
