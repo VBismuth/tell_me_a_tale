@@ -20,7 +20,7 @@
 import re
 from dataclasses import dataclass
 
-from tokens import TokenType, Token, Pos
+from .tokens import TokenType, Token, Pos
 
 # TODO: if common keyword used outside of context, like 'about' outside
 # of 'tell me' then it should be connected to string
