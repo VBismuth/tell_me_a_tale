@@ -62,28 +62,29 @@ class Text:
     """ Text structure """
     current_pos: Pos
     text: str
-    txt_idx: int = 0
     filename: str = '<string>'
 
-    # FIXME: get pos need to be rewritten
     def get_pos(self, idx: int = 0) -> tuple[int, int]:
         """ Gets text pos by index """
-        c_idx: int = 0 if idx <= self.txt_idx else self.txt_idx
-        chunk: str = self.text[c_idx:idx + 1]
-        if '\n' in chunk:
-            line: int = (self.current_pos.line if c_idx else 0) + max(
-                self.text.count('\n', c_idx, idx), 1)
-            col: int = max(
-                idx - 1 - self.text.rfind('\n', c_idx, idx), 1)
+        line: int = self.current_pos.line
+        col: int = self.current_pos.column
+        if self.current_pos.index == 0 or self.current_pos.index > idx:
+            pointer: int = 0
+            line = 1
+            col = 1
         else:
-            line: int = self.current_pos.line
-            col: int = max(self.current_pos.column + idx - 1, 1)
+            pointer: int = self.current_pos.index
+        line += self.text.count('\n', pointer, idx)
+        if line == self.current_pos.line:
+            col += max(idx - pointer, 0)
+        else:
+            col = max(idx - self.text.rfind('\n', pointer, idx), 1)
         return (line, col)
 
     def set_pos(self, idx: int = 0) -> None:
-        """ Sets pos by idx """
+        """ Sets pos by index idx """
         line, col = self.get_pos(idx)
-        self.txt_idx = idx
+        self.current_pos.index = idx
         self.current_pos.line = line
         self.current_pos.column = col
 
@@ -100,8 +101,8 @@ def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Token:
         tokenname: str = match.lastgroup
         body: str = match.group(tokenname)
         idx_start, idx_end = match.span(tokenname)
-        pos_start: Pos = Pos(*text.get_pos(idx_start))
-        pos_end: Pos = Pos(*text.get_pos(idx_end))
+        pos_start: Pos = Pos(*text.get_pos(idx_start), idx_start)
+        pos_end: Pos = Pos(*text.get_pos(idx_end), idx_end)
         text.set_pos(idx_end)
 
         yield Token(

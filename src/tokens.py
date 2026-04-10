@@ -28,6 +28,7 @@ class Pos:
     """ Positon in text """
     line: int = 1
     column: int = 1
+    index: int = 0
 
 
 class TokenType(Enum):
