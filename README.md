@@ -1,4 +1,5 @@
-# Tell Me a Tale
+# ![TMT Logo](tmt_logo.svg "Tell Me a Tale")  Tell Me a Tale
+
 A small programming language designed to be read like a story
 
 ___
