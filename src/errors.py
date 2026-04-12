@@ -17,8 +17,7 @@
 
 """ Printing error messages """
 
-from .tokens import Pos
-from .lexer import Text
+from .text import Text, Pos
 
 DEFAULT_IDENT = ' '
 

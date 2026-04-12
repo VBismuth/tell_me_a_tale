@@ -18,10 +18,10 @@
 """ Lexer for the TMT """
 
 import re
-from dataclasses import dataclass
 from typing import Generator
 
-from .tokens import TokenType, Token, Pos
+from .tokens import TokenType, Token
+from .text import Text, Pos
 
 # TODO: if common keyword used outside of context, like 'about' outside
 # of 'tell me' then it should be connected to string
@@ -56,44 +56,6 @@ token_patterns = {
 MULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'
                              for name, ptrn in
                              token_patterns.items())
-
-
-@dataclass
-class Text:
-    """ Text structure """
-    current_pos: Pos
-    text: str
-    filename: str = '<string>'
-
-    def get_pos(self, idx: int = 0) -> tuple[int, int]:
-        """ Gets text pos by index """
-        line: int = self.current_pos.line
-        col: int = self.current_pos.column
-        if self.current_pos.index == 0 or self.current_pos.index > idx:
-            pointer: int = 0
-            line = 1
-            col = 1
-        else:
-            pointer = self.current_pos.index
-        line += self.text.count('\n', pointer, idx)
-        if line == self.current_pos.line:
-            col += max(idx - pointer, 0)
-        else:
-            col = max(idx - self.text.rfind('\n', pointer, idx), 1)
-        return (line, col)
-
-    def set_pos(self, idx: int = 0) -> None:
-        """ Sets pos by index idx """
-        line, col = self.get_pos(idx)
-        self.current_pos.index = idx
-        self.current_pos.line = line
-        self.current_pos.column = col
-
-    def get_line(self, line_n: int = 1) -> str:
-        """ Get line from text """
-        if not self.text:
-            return ''
-        return self.text.split('\n')[max(line_n - 1, 0)]
 
 
 def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Generator[Token]:

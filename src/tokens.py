@@ -22,13 +22,7 @@ Contains Pos and Token structures and TokenType enum
 from enum import Enum, auto as iota
 from dataclasses import dataclass
 
-
-@dataclass
-class Pos:
-    """ Positon in text """
-    line: int = 1
-    column: int = 1
-    index: int = 0
+from .text import Pos
 
 
 class TokenType(Enum):
