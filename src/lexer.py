@@ -25,32 +25,37 @@ from .text import Text, Pos
 
 # TODO: if common keyword used outside of context, like 'about' outside
 # of 'tell me' then it should be connected to string
-keywords = (
+keywords = sorted((
     'this is', 'a tale', 'an actor', 'a constant', 'a pointer', 'a list',
-    'a dict', 'of kind', 'of type', 'there was', 'there is', 'for ',
+    'a dict', 'of kind', 'of type', 'there was', 'there is', 'for ', 'in ',
     'about', 'in which', 'that is', 'become', 'and ', 'or ', 'not ',
     'say ', 'tell me', 'telling me', 'the meaning of', 'should listen to me',
     'if ', 'then ', 'otherwise', 'else', 'and that\'s it', 'equals', 'equal',
     'while', 'do ', 'until', 'repeat', 'so it begins', 'the end',
     'alias', 'as ', 'cast', 'append book', 'visit library', 'from ',
-)
+), key=len, reverse=True)
 
 types = (
     'number', 'string', 'boolean', 'none',
 )
 
 # TODO: meta keywords like @LINKER -l:raylib.a
-assert TokenType.COUNT.value == 10, "Nonexhaustive token handle"
+assert TokenType.COUNT.value == 15, "Nonexhaustive token handle"
 token_patterns = {
     'COMMENT':    r'(?:-\([\s\S]*?\)-)|(?:--[^\n]*)',
-    'IDENTIFIER': r'\"[^\n]*?\"',
-    'STRING':     r'`[\s\S]*?`',
+    'IDENTIFIER': r'\"(?:[^\n](?:\\\")*)*?\"',
+    'STRING':     r'`(?:[\s\S](?:\\`)*)*?`',
+    'METAKEY':    r'@\w+',
+    'ANYBRACE':   r'[\[\]\(\)\{\}]',
     'TYPES':      '(?:' + '|'.join(types) + r')(?:=[\w]+)?',
     'EXPRESSION': r'_[^\n]*?_',
+    'NUMBER':     r'[+-]?[\d]+(?:\.[\d]+)?(?:e[+-]?\d+)?',
+    'RANGE':      r'\.\.=?',
     'KEYWORD':    '|'.join(keywords),
     'TERMINATOR': '[.;]',
-    'COLON':      ',',
-    'WORD':       r'[\w]+'
+    'COMMA':      ',',
+    'COLON':      ':',
+    'WORD':       r'[-+=\w]+'
 }
 
 MULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'

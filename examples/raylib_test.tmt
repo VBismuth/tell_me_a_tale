@@ -17,7 +17,7 @@ This is a tale "BeginDrawing" from "raylib".
 This is a tale "EndDrawing" from "raylib".
 This is a tale "CloseWindow" from "raylib".
 
-Tell me a tale "InitWindow" with _800_, _600_, `Hello from TMT`.
+Tell me a tale "InitWindow" with 800, 600, `Hello from TMT`.
 While you not telling me a tale "WindowShouldClose" do;
     Tell me a tale "BeginDrawing".
     Tell me a tale "EndDrawing".

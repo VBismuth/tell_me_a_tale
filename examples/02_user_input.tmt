@@ -3,6 +3,6 @@ There is a "Number Input" of kind number that should listen to me.
 There is a "Message Input" that should listen to me.
 
 -- Printing it
--- String interpolation is quite verbose with a "the meaning of" keyword
 Say `Number Input: ` and the meaning of "Number Input".
-Say `Message Input: ` and the "Message Input".
+-- String interpolation is quite verbose with a "the meaning of" keyword, we can use $.identifier.
+Say `Message Input: $"Number Input"`.
