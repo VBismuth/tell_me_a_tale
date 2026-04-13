@@ -30,9 +30,10 @@ def print_arrows(indent: int, size: int) -> None:
 def error_message(start_pos: Pos, end_pos: Pos,
                   text: Text, message: str) -> None:
     """ Print error message """
+    print()
     line_num_size: int = len(str(max(start_pos.line, end_pos.line)))
     start_pos_num: str = f'{start_pos.line:0{line_num_size}d} |'
-    if start_pos.line > 1:
+    if start_pos.line > 1 and text.get_line(start_pos.line - 1):
         print(f'{start_pos.line - 1:0{line_num_size}d} |', end='')
         print(text.get_line(start_pos.line - 1))
     text_part: str = text.get_line(start_pos.line)
@@ -41,7 +42,18 @@ def error_message(start_pos: Pos, end_pos: Pos,
     if end_pos.line == start_pos.line:
         arrows_size: int = max(end_pos.column - start_pos.column, 1)
     else:
-        arrows_size = len(text_part) - start_pos.column
-    print_arrows(start_pos.column - 1 + len(start_pos_num), arrows_size)
+        arrows_size = len(text_part) - start_pos.column + 1
+    print(' ' * (len(start_pos_num) - 1) + '|', end='')
+    print_arrows(start_pos.column - 1, arrows_size)
 
-    print(f'{text.filename}:{start_pos.line}:{start_pos.column}  {message}')
+    for line in range(start_pos.line + 1, end_pos.line + 1):
+        text_part = text.get_line(line)
+        arrows_size = (
+            len(text_part) if line != end_pos.line else end_pos.column - 1
+        )
+        print(f'{line:0{line_num_size}d} |', end='')
+        print(text_part)
+        print(' ' * (len(start_pos_num) - 1) + '|', end='')
+        print_arrows(0, arrows_size)
+
+    print(f'\n{text.filename}:{start_pos.line}:{start_pos.column}  {message}')
