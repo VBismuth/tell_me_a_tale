@@ -40,18 +40,23 @@ types = (
 )
 
 # TODO: meta keywords like @LINKER -l:raylib.a
-assert TokenType.COUNT.value == 15, "Nonexhaustive token handle"
+assert TokenType.COUNT.value == 20, "Nonexhaustive token handle"
 token_patterns = {
     'COMMENT':    r'(?:-\([\s\S]*?\)-)|(?:--[^\n]*)',
     'IDENTIFIER': r'\"(?:[^\n](?:\\\")*)*?\"',
     'STRING':     r'`(?:[\s\S](?:\\`)*)*?`',
     'METAKEY':    r'@\w+',
-    'ANYBRACE':   r'[\[\]\(\)\{\}]',
     'TYPES':      '(?:' + '|'.join(types) + r')(?:=[\w]+)?',
     'EXPRESSION': r'_[^\n]*?_',
     'NUMBER':     r'[+-]?[\d]+(?:\.[\d]+)?(?:e[+-]?\d+)?',
     'RANGE':      r'\.\.=?',
     'KEYWORD':    '|'.join(keywords),
+    'LBRACE':     r'\{',
+    'RBRACE':     r'\}',
+    'LBRACKET':   r'\[',
+    'RBRACKET':   r'\]',
+    'LPAREN':     r'\(',
+    'RPAREN':     r'\)',
     'TERMINATOR': '[.;]',
     'COMMA':      ',',
     'COLON':      ':',
