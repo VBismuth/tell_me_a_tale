@@ -30,9 +30,12 @@ keywords = sorted((
     'a dict', 'of kind', 'of type', 'there was', 'there is', 'for ', 'in ',
     'about', 'in which', 'that is', 'become', 'and ', 'or ', 'not ',
     'say ', 'tell me', 'telling me', 'the meaning of', 'should listen to me',
-    'if ', 'then ', 'otherwise', 'else', 'and that\'s it', 'equals', 'equal',
+    'if ', 'then ', 'otherwise', 'else', 'and that\'s it', 'self',
     'while', 'do ', 'until', 'repeat', 'so it begins', 'the end',
     'alias', 'as ', 'cast', 'append book', 'visit library', 'from ',
+    'equals to', 'equal to', 'greater than', 'less than',
+    'equal or greater than', 'equal or less than',
+    '=', '!=', '>', '<', '>=', '<=',
 ), key=len, reverse=True)
 
 types = (
@@ -60,7 +63,7 @@ token_patterns = {
     'TERMINATOR': '[.;]',
     'COMMA':      ',',
     'COLON':      ':',
-    'WORD':       r'[-+=\w]+'
+    'WORD':       r'[^\s\.,;]+'
 }
 
 MULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'

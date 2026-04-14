@@ -1,8 +1,9 @@
 --- Working with user input ---
 There is a "Number Input" of kind number that should listen to me.
-There is a "Message Input" that should listen to me.
+There is a "Message Input" that should listen to me. -- Implicit string
 
 -- Printing it
 Say `Number Input: ` and the meaning of "Number Input".
--- String interpolation is quite verbose with a "the meaning of" keyword, we can use $.identifier.
+-- String interpolation is quite verbose with a "the meaning of" keyword
+-- So we can use $"identifier" in strings `` and in expressions __
 Say `Message Input: $"Number Input"`.
