@@ -27,16 +27,17 @@ from .text import Text, Pos
 # of 'tell me' then it should be connected to string
 keywords = sorted((
     'this is', 'a tale', 'an actor', 'a constant', 'a pointer', 'a list',
-    'a dict', 'of kind', 'of type', 'there was', 'there is', 'for ', 'in ',
-    'about', 'in which', 'that is', 'become', 'and ', 'or ', 'not ',
+    'a dict', 'of kind', 'of type', 'there was', 'there is', 'for', 'in',
+    'about', 'in which', 'that is', 'become', 'and', 'or', 'not',
     'say ', 'tell me', 'telling me', 'the meaning of', 'should listen to me',
-    'if ', 'then ', 'otherwise', 'else', 'and that\'s it', 'self',
+    'if', 'then', 'otherwise', 'else', 'that\'s it', 'self',
     'while', 'do ', 'until', 'repeat', 'so it begins', 'the end',
     'alias', 'as ', 'cast', 'append book', 'visit library', 'from ',
     'equals to', 'equal to', 'greater than', 'less than',
     'equal or greater than', 'equal or less than',
     '=', '!=', '>', '<', '>=', '<=',
 ), key=len, reverse=True)
+# TODO: >, =, etc... should't be part of KEYWORDS
 
 types = (
     'number', 'string', 'boolean', 'none',
@@ -53,7 +54,7 @@ token_patterns = {
     'EXPRESSION': r'_[^\n]*?_',
     'NUMBER':     r'[+-]?[\d]+(?:\.[\d]+)?(?:e[+-]?\d+)?',
     'RANGE':      r'\.\.=?',
-    'KEYWORD':    '|'.join(keywords),
+    'KEYWORD':    r'\s|'.join(keywords) + r'\s',
     'LBRACE':     r'\{',
     'RBRACE':     r'\}',
     'LBRACKET':   r'\[',
@@ -71,6 +72,27 @@ MULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'
                              token_patterns.items())
 
 
+def clean_token(text: Text, tok: Token) -> None:
+    """ Clean token body from usless chars """
+    match tok.type_:
+        case TokenType.KEYWORD:
+            body: str = re.sub(r'[\s]+$', '', tok.body)
+            new_idx: int = tok.end_pos.index - (len(tok.body) - len(body))
+            tok.end_pos.update(
+                Pos(
+                    *text.get_pos(new_idx, ignore_current_idx=True),
+                    new_idx
+                )
+            )
+            tok.body = body
+        case TokenType.STRING:
+            tok.body = tok.body.strip('`')
+        case TokenType.EXPRESSION:
+            tok.body = tok.body.strip('_')
+        case TokenType.IDENTIFIER:
+            tok.body = tok.body.strip('"')
+
+
 def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Generator[Token]:
     """ Token generator from text """
     for match in re.finditer(pattern, text.text, re.IGNORECASE):
@@ -81,10 +103,12 @@ def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Generator[Token]:
         pos_end: Pos = Pos(*text.get_pos(idx_end), idx_end)
         text.set_pos(idx_end)
 
-        yield Token(
+        tok: Token = Token(
             start_pos=pos_start,
             end_pos=pos_end,
             filename=text.filename,
             body=body,
             type_=getattr(TokenType, tokenname) or TokenType.NONE
         )
+        clean_token(text, tok)
+        yield tok

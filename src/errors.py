@@ -30,7 +30,7 @@ def print_arrows(indent: int, size: int) -> None:
 def error_message(start_pos: Pos, end_pos: Pos,
                   text: Text, message: str) -> None:
     """ Print error message """
-    print()
+    print()  # TODO reformat message
     line_num_size: int = len(str(max(start_pos.line, end_pos.line)))
     start_pos_num: str = f'{start_pos.line:0{line_num_size}d} |'
     if start_pos.line > 1 and text.get_line(start_pos.line - 1):

@@ -27,26 +27,35 @@ class Pos:
     column: int = 1
     index: int = 0
 
+    def update(self, other: Pos) -> None:
+        """ Update Pos object """
+        self.line = other.line
+        self.column = other.column
+        self.index = other.index
+
 
 @dataclass
 class Text:
     """ Text structure """
     current_pos: Pos
     text: str
-    filename: str = '<string>'
+    filename: str = '<string>'  # TODO: from filename to full path
 
-    def get_pos(self, idx: int = 0) -> tuple[int, int]:
+    def get_pos(self, idx: int = 0,
+                ignore_current_idx: bool = False) -> tuple[int, int]:
         """ Gets text pos by index """
         line: int = self.current_pos.line
         col: int = self.current_pos.column
-        if self.current_pos.index == 0 or self.current_pos.index > idx:
+        if (ignore_current_idx or
+                self.current_pos.index == 0 or
+                self.current_pos.index > idx):
             pointer: int = 0
             line = 1
             col = 1
         else:
             pointer = self.current_pos.index
         line += self.text.count('\n', pointer, idx)
-        if line == self.current_pos.line:
+        if not ignore_current_idx and line == self.current_pos.line:
             col += max(idx - pointer, 0)
         else:
             col = max(idx - self.text.rfind('\n', pointer, idx), 1)
