@@ -17,20 +17,39 @@
 
 """ Printing error messages """
 
+from enum import Enum
+
 from .text import Text, Pos
 
 DEFAULT_IDENT = ' '
 
 
-def print_arrows(indent: int, size: int) -> None:
+class Colors(Enum):
+    """ Terminal colors (ANSI escape codes)"""
+    RED           = "\033[31m"  # ]
+    YELLOW        = "\033[33m"  # ]
+    MAGENTA       = "\033[35m"  # ]
+    BLANK         = "\033[0m"   # ]
+
+
+def print_arrows(indent: int, size: int, color: Colors = Colors.BLANK) -> None:
     """ Draw arrows """
+    if not isinstance(color, Colors):
+        color = Colors.BLANK
+    print(color.value, end='')
     print(DEFAULT_IDENT * indent + '^' * size)
+    print(Colors.BLANK.value, end='')
 
 
 def error_message(start_pos: Pos, end_pos: Pos,
-                  text: Text, message: str) -> None:
+                  text: Text, message: str,
+                  message_color: Colors = Colors.BLANK) -> None:
     """ Print error message """
-    print()  # TODO reformat message
+    if not isinstance(message_color, Colors):
+        message_color = Colors.BLANK
+    print(f'\n{text.filename}:{start_pos.line}:{start_pos.column} :: '
+          f'{message_color.value}{message}{Colors.BLANK.value}')
+    print(Colors.MAGENTA.value, end='')
     line_num_size: int = len(str(max(start_pos.line, end_pos.line)))
     start_pos_num: str = f'{start_pos.line:0{line_num_size}d} |'
     if start_pos.line > 1 and text.get_line(start_pos.line - 1):
@@ -44,7 +63,7 @@ def error_message(start_pos: Pos, end_pos: Pos,
     else:
         arrows_size = len(text_part) - start_pos.column + 1
     print(' ' * (len(start_pos_num) - 1) + '|', end='')
-    print_arrows(start_pos.column - 1, arrows_size)
+    print_arrows(start_pos.column - 1, arrows_size, message_color)
 
     for line in range(start_pos.line + 1, end_pos.line + 1):
         text_part = text.get_line(line)
@@ -54,6 +73,5 @@ def error_message(start_pos: Pos, end_pos: Pos,
         print(f'{line:0{line_num_size}d} |', end='')
         print(text_part)
         print(' ' * (len(start_pos_num) - 1) + '|', end='')
-        print_arrows(0, arrows_size)
-
-    print(f'\n{text.filename}:{start_pos.line}:{start_pos.column}  {message}')
+        print_arrows(0, arrows_size, message_color)
+    print(Colors.BLANK.value, end='')
