@@ -26,16 +26,14 @@ from .text import Text, Pos
 # TODO: if common keyword used outside of context, like 'about' outside
 # of 'tell me' then it should be connected to string
 keywords = sorted((
-    'this is', 'a tale', 'an actor', 'a constant', 'a pointer', 'a list',
-    'a dict', 'of kind', 'of type', 'there was', 'there is', 'for', 'in',
-    'about', 'in which', 'that is', 'become', 'and', 'or', 'not',
+    'this is', 'that was', 'a tale', 'an actor', 'a constant', 'a pointer',
+    'a list', 'a dict', 'of kind', 'of type', 'there was', 'there is', 'for',
+    'in', 'about', 'in which', 'that is', 'become', 'and', 'or', 'not',
     'say ', 'tell me', 'telling me', 'the meaning of', 'should listen to me',
     'if', 'then', 'otherwise', 'else', 'that\'s it', 'self',
     'while', 'do ', 'until', 'repeat', 'so it begins', 'the end',
     'alias', 'as ', 'cast', 'append book', 'visit library', 'from ',
-    'equals to', 'equal to', 'greater than', 'less than',
-    'equal or greater than', 'equal or less than',
-    '=', '!=', '>', '<', '>=', '<=',
+    'read from file', 'rewrite to file', 'append to file',
 ), key=len, reverse=True)
 # TODO: >, =, etc... should't be part of KEYWORDS
 
@@ -44,27 +42,35 @@ types = (
 )
 
 # TODO: meta keywords like @LINKER -l:raylib.a
-assert TokenType.COUNT.value == 20, "Nonexhaustive token handle"
+assert TokenType.COUNT.value == 26, "Nonexhaustive token handle"
 token_patterns = {
-    'COMMENT':    r'(?:-\([\s\S]*?\)-)|(?:--[^\n]*)',
-    'IDENTIFIER': r'\"(?:[^\n](?:\\\")*)*?\"',
-    'STRING':     r'`(?:[\s\S](?:\\`)*)*?`',
-    'METAKEY':    r'@\w+',
-    'TYPES':      '(?:' + '|'.join(types) + r')(?:=[\w]+)?',
-    'EXPRESSION': r'_[^\n]*?_',
-    'NUMBER':     r'[+-]?[\d]+(?:\.[\d]+)?(?:e[+-]?\d+)?',
-    'RANGE':      r'\.\.=?',
-    'KEYWORD':    r'\s|'.join(keywords) + r'\s',
-    'LBRACE':     r'\{',
-    'RBRACE':     r'\}',
-    'LBRACKET':   r'\[',
-    'RBRACKET':   r'\]',
-    'LPAREN':     r'\(',
-    'RPAREN':     r'\)',
-    'TERMINATOR': '[.;]',
-    'COMMA':      ',',
-    'COLON':      ':',
-    'WORD':       r'[^\s\.,;]+'
+    'COMMENT':      r'(?:-\([\s\S]*?\)-)|(?:--[^\n]*)',
+    'IDENTIFIER':   r'\"(?:[^\n](?:\\\")*)*?\"',
+    'STRING':       r'`(?:[\s\S](?:\\`)*)*?`',
+    'METAKEY':      r'@\w+',
+    'TYPES':        '(?:' + '|'.join(types) + r')(?:=[\w]+)?',
+    'EXPRESSION':   r'_[^\n]*?_',
+    'NUMBER':       r'[+-]?[\d]+(?:\.[\d]+)?(?:e[+-]?\d+)?',
+    'RANGE':        r'\.\.=?',
+    'KEYWORD':      r'\s|'.join(keywords) + r'\s',
+    'LBRACE':       r'\{',
+    'RBRACE':       r'\}',
+    'LBRACKET':     r'\[',
+    'RBRACKET':     r'\]',
+    'LPAREN':       r'\(',
+    'RPAREN':       r'\)',
+    'EQUAL':        r'equal to|equals|same as|=',
+    'NOTEQUAL':     r'not equal|doesn\'t equal|does not equal|!=|<>',
+    'LESSTHAN':     r'less than|smaller than|lower than|<',
+    'LESSEQUAL':    r'less or equal to|smaller '
+                    'or equal to|lower or equal to|<=',
+    'GREATERTHAN':  r'greater than|bigger than|higher than|>',
+    'GREATEQUAL':   r'greater or equal to|bigger '
+                    'or equal to|higher or equal to|>=',
+    'TERMINATOR':   '[.;]',
+    'COMMA':        ',',
+    'COLON':        ':',
+    'WORD':         r'[^\s\.,;]+'
 }
 
 MULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'
@@ -93,6 +99,7 @@ def clean_token(text: Text, tok: Token) -> None:
             tok.body = tok.body.strip('"')
 
 
+# TODO: fix tokens for keywords
 def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Generator[Token]:
     """ Token generator from text """
     for match in re.finditer(pattern, text.text, re.IGNORECASE):
@@ -111,4 +118,6 @@ def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Generator[Token]:
             type_=getattr(TokenType, tokenname) or TokenType.NONE
         )
         clean_token(text, tok)
+        if tok.type_ is TokenType.WORD and tok.body in keywords:
+            tok.type_ = TokenType.KEYWORD
         yield tok
