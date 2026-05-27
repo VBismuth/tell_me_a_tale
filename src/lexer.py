@@ -18,9 +18,9 @@
 """ Lexer for the TMT """
 
 import re
-from typing import Generator
+from typing import Generator, Any
 
-from .tokens import TokenType, Token
+from .tokens import TokenType, TokenMeta, Token
 from .text import Text, Pos
 
 # TODO: if common keyword used outside of context, like 'about' outside
@@ -35,14 +35,12 @@ keywords = sorted((
     'alias', 'as ', 'cast', 'append book', 'visit library', 'from ',
     'read from file', 'rewrite to file', 'append to file',
 ), key=len, reverse=True)
-# TODO: >, =, etc... should't be part of KEYWORDS
 
 types = (
     'number', 'string', 'boolean', 'none',
 )
 
 # TODO: meta keywords like @LINKER -l:raylib.a
-assert TokenType.COUNT.value == 26, "Nonexhaustive token handle"
 token_patterns = {
     'COMMENT':      r'(?:-\([\s\S]*?\)-)|(?:--[^\n]*)',
     'IDENTIFIER':   r'\"(?:[^\n](?:\\\")*)*?\"',
@@ -72,24 +70,20 @@ token_patterns = {
     'COLON':        ':',
     'WORD':         r'[^\s\.,;]+'
 }
+assert TokenType.COUNT.value == len(token_patterns) + 1, \
+    "Nonexhaustive token handle"
 
 MULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'
                              for name, ptrn in
                              token_patterns.items())
 
 
-def clean_token(text: Text, tok: Token) -> None:
-    """ Clean token body from usless chars """
+def clean_token(tok: Token) -> None:
+    """ Clean token body from usless chars
+    and correct unresolved keywords"""
     match tok.type_:
         case TokenType.KEYWORD:
             body: str = re.sub(r'[\s]+$', '', tok.body)
-            new_idx: int = tok.end_pos.index - (len(tok.body) - len(body))
-            tok.end_pos.update(
-                Pos(
-                    *text.get_pos(new_idx, ignore_current_idx=True),
-                    new_idx
-                )
-            )
             tok.body = body
         case TokenType.STRING:
             tok.body = tok.body.strip('`')
@@ -98,9 +92,14 @@ def clean_token(text: Text, tok: Token) -> None:
         case TokenType.IDENTIFIER:
             tok.body = tok.body.strip('"')
 
+    if tok.type_ is TokenType.WORD and tok.body in keywords:
+        tok.type_ = TokenType.KEYWORD
+
 
 # TODO: fix tokens for keywords
-def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Generator[Token]:
+def tokenize(text: Text, pattern: str = MULTIPATTERN,
+             meta: TokenMeta = TokenMeta(
+                 clean_func=clean_token)) -> Generator[Any]:
     """ Token generator from text """
     for match in re.finditer(pattern, text.text, re.IGNORECASE):
         tokenname: str = match.lastgroup or 'NONE'
@@ -110,14 +109,13 @@ def tokenize(text: Text, pattern: str = MULTIPATTERN) -> Generator[Token]:
         pos_end: Pos = Pos(*text.get_pos(idx_end), idx_end)
         text.set_pos(idx_end)
 
-        tok: Token = Token(
+        tok: Any = meta.token_object(
             start_pos=pos_start,
             end_pos=pos_end,
             filename=text.filename,
             body=body,
-            type_=getattr(TokenType, tokenname) or TokenType.NONE
+            type_=getattr(meta.token_type, tokenname) or meta.token_type.NONE
         )
-        clean_token(text, tok)
-        if tok.type_ is TokenType.WORD and tok.body in keywords:
-            tok.type_ = TokenType.KEYWORD
+        if callable(meta.clean_func):
+            meta.clean_func(tok)
         yield tok

@@ -20,6 +20,7 @@ Contains Pos and Token structures and TokenType enum
 """
 
 from enum import Enum, auto as iota
+from typing import Callable, Any
 from dataclasses import dataclass
 
 from .text import Pos
@@ -63,7 +64,7 @@ class Token:
     filename: str
     start_pos: Pos
     end_pos: Pos
-    type_: TokenType = TokenType.NONE
+    type_: Enum = TokenType.NONE
     body: str = ''
 
     def __str__(self) -> str:
@@ -73,3 +74,11 @@ class Token:
             return "[NOT A TOKEN]"
         return (f"[{self.type_.name}:{self.body[:30]}" + ('<...>]'
                 if len(self.body) >= 30 else ']'))
+
+
+@dataclass
+class TokenMeta:
+    """ Token metadata """
+    token_object: type[Any]  = Token
+    token_type: type[Any] = TokenType
+    clean_func: Callable[[Any], None] | None = None
