@@ -1,0 +1,125 @@
+""" Merges several source py files into one """
+from pathlib import Path
+from typing import Optional
+
+
+# Essentials
+def _format(text: str) -> str:
+    return SPECIAL_FORMAT.format(text)
+
+
+SPECIAL_FORMAT: str = '!!{}!!'
+INCLUDE_AS_MODULE: str = _format('module')
+PYTHON_EXT: str = '.py'
+BLANK_LINES: str = '\n' * 3
+
+# Config
+TARGET_DIR: Path = Path('tmp')
+TARGET: str = 'storyteller'
+SOURCE_DIR: Path = Path('src')
+SOURCE_SCHEME: list[str] = [
+    '__init__',
+    'text',
+    'errors',
+    'tokens',
+    'lexer',
+    'expressions',
+    'ast',
+    'parser',
+    'tests',
+]
+INCLUDES: dict[list[str]] = {
+    're': [INCLUDE_AS_MODULE],
+    'typing': ['Generator', 'Callable', 'Any'],
+    'dataclasses': ['dataclass'],
+    'enum': ['Enum', 'auto as iota'],
+    'unittest': ['TestCase', 'main as unittestmain']
+}
+HEADER_TEXT: str = '''# -*- coding: utf8 -*-
+#   Tell Me a Tale, a small story-like programming language.
+#   Copyright (C) 2026  VBismuth <work.nicitons@yandex.ru>
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+""" This is full source of the Storyteller - a TMT interpreter """
+'''
+FOOTER_TEXT: str = '''if __name__ == "__main__":
+    unittestmain()
+'''
+
+
+def post_processing(text: str) -> str:
+    """ Function that will be called after merging """
+    # pass
+    return text.replace(_format('SELF'),
+                        text.replace("\\", r"\\")\
+                            .replace("'", "\\'"))
+
+
+# Script main section
+def _extract_content(text: str) -> str:
+    begin_ptrn: str = _format('START')
+    end_ptrn: str = _format('STOP')
+    start_pos: int = text.find(begin_ptrn) + (len(begin_ptrn) + 1
+                                              if begin_ptrn in text else 0)
+    end_pos: int = text.rfind(end_ptrn)
+    return text[start_pos:end_pos]
+
+
+def _merger(first: str, second: str, filename: Optional[str] = None) -> str:
+    if isinstance(filename, str):
+        second = f'# {filename + PYTHON_EXT}\n' + second
+    return first + BLANK_LINES + second
+
+
+def _load_file(file: Path) -> str:
+    res: str = ''
+    if file.exists():
+        res = file.read_text()
+    else:
+        print('WARN: File', str(file), 'does not exists')
+    return res
+
+
+def _main() -> None:
+    merged_file: str = HEADER_TEXT
+    for module, includes in INCLUDES.items():
+        merged_file += '\n'
+        if INCLUDE_AS_MODULE in includes:
+            merged_file += f'import {module}'
+        else:
+            merged_file += f'from {module} import {', '.join(includes)}'
+    for file in SOURCE_SCHEME:
+        source: Path = SOURCE_DIR / (file + PYTHON_EXT)
+        loaded: str = _load_file(source)
+        if not loaded:
+            continue
+        content: str = _extract_content(loaded)
+        if not content:
+            print('WARN:', source, 'has no marked content')
+            continue
+        merged_file = _merger(merged_file, content, file)
+        print('INFO: merged', source, 'successfuly')
+    merged_file += BLANK_LINES + FOOTER_TEXT
+    if 'post_processing' in globals():
+        merged_file = post_processing(merged_file)
+
+    target_file: Path = TARGET_DIR / (TARGET + PYTHON_EXT)
+    target_file.touch(exist_ok=True)
+    target_file.write_text(merged_file)
+    print('INFO: Merged to', str(target_file.absolute()))
+
+
+if __name__ == '__main__':
+    _main()

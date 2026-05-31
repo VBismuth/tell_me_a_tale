@@ -7,6 +7,7 @@ from .lexer import tokenize
 from .expressions import exp_tokenize, ExpToken, ExpTokenType
 
 
+# !!START!!
 class TestTokenize(TestCase):
     """ Test tokenization """
 
@@ -95,7 +96,3 @@ class TestExpTokenize(TestCase):
             self.assertIsInstance(token.type_, ExpTokenType,
                                   f"Token {str(token)} type is "
                                   f"incorrect")
-
-
-if __name__ == '__main__':
-    unittestmain()

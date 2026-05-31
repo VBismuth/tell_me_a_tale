@@ -23,6 +23,7 @@ from typing import Generator, Any
 from .tokens import TokenType, TokenMeta, Token
 from .text import Text, Pos
 
+# !!START!!
 # TODO: if common keyword used outside of context, like 'about' outside
 # of 'tell me' then it should be connected to string
 keywords = sorted((

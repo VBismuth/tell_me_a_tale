@@ -20,6 +20,7 @@
 from dataclasses import dataclass
 
 
+# !!START!!
 @dataclass
 class Pos:
     """ Positon in text """

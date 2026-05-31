@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from .text import Pos
 
 
+# !!START!!
 class TokenType(Enum):
     """ Tokey type """
     NONE        = 0
