@@ -18,9 +18,14 @@
 """ Lexer for the TMT """
 
 import re
-from typing import Generator, Any
+from typing import Generator
 
-from .tokens import TokenType, TokenMeta, Token
+from .tokens import (
+    TokenType, Token,
+    ExpTokenType, ExpToken,
+    AnyToken,
+    TokenMeta
+)
 from .text import Text, Pos
 
 # !!START!!
@@ -78,10 +83,43 @@ MULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'
                              for name, ptrn in
                              token_patterns.items())
 
+exp_token_patterns = {
+    "PLUS":    r'\+',
+    "MINUS":   r'\-',
+    "MULT":    r'\*',
+    "INTDIV":  r'\/\/',
+    "DIV":     r'\/',
+    "MOD":     r'\%',
+    "POW":     r'\^',
+    "LPAREN":  r'\(',
+    "RPAREN":  r'\)',
+    'NUMBER':  r'[+-]?[\d]+(?:\.[\d]+)?(?:e[+-]?\d+)?',
+    "IDENT":   r'\$\"(?:[^\n](?:\\\")*)*?\"',
+    "KEYWORD": r'[^\s\(\)]+',
+}
+assert ExpTokenType.COUNT.value == len(exp_token_patterns) + 1, \
+    "Non-exhaustive token coverage for expressions"
 
-def clean_token(tok: Token) -> None:
+EXPMULTIPATTERN: str = '|'.join(f'(?P<{name}>{ptrn})'
+                                for name, ptrn in
+                                exp_token_patterns.items())
+
+
+def exp_clean(tok: AnyToken) -> None:
+    """ Exp token fixing """
+    assert isinstance(tok, ExpToken), \
+        f'exp_clean encounter wrong type "{type(tok)}", '\
+        '"ExpToken" expected'
+    if tok.type_ is ExpTokenType.IDENT:
+        tok.body = tok.body[len('$"'):-len('"')]
+
+
+def clean_token(tok: AnyToken) -> None:
     """ Clean token body from usless chars
     and correct unresolved keywords"""
+    assert isinstance(tok, Token), \
+        f'clean_token encounter wrong type "{type(tok)}", '\
+        '"Token" expected'
     match tok.type_:
         case TokenType.KEYWORD:
             body: str = re.sub(r'[\s]+$', '', tok.body)
@@ -100,23 +138,59 @@ def clean_token(tok: Token) -> None:
 # TODO: fix tokens for keywords
 def tokenize(text: Text, pattern: str = MULTIPATTERN,
              meta: TokenMeta = TokenMeta(
-                 clean_func=clean_token)) -> Generator[Any]:
+                 clean_func=clean_token),
+             text_offset: int = 0,
+             tokenize_expr: bool = True) -> Generator[AnyToken]:
     """ Token generator from text """
     for match in re.finditer(pattern, text.text, re.IGNORECASE):
         tokenname: str = match.lastgroup or 'NONE'
         body: str = match.group(tokenname)
         idx_start, idx_end = match.span(tokenname)
+        idx_start += text_offset
+        idx_end += text_offset
         pos_start: Pos = Pos(*text.get_pos(idx_start), idx_start)
         pos_end: Pos = Pos(*text.get_pos(idx_end), idx_end)
         text.set_pos(idx_end)
+        if tokenname == 'EXPRESSION' and tokenize_expr:
+            body = body.strip('_')
+            exp_text: Text = Text(
+                text=body,
+                current_pos=Pos()
+            )
+            exp_meta: TokenMeta = TokenMeta(
+                token_object=ExpToken,
+                token_type=ExpTokenType,
+                clean_func=exp_clean,
+            )
+            yield from tokenize(
+                exp_text,
+                meta=exp_meta,
+                pattern=EXPMULTIPATTERN,
+                text_offset=idx_start + 1,
+            )
+        else:
+            tok: AnyToken = meta.token_object(
+                start_pos=pos_start,
+                end_pos=pos_end,
+                filename=text.filename,
+                body=body,
+                type_=(getattr(meta.token_type, tokenname) or
+                       meta.token_type.NONE)
+            )
+            if callable(meta.clean_func):
+                meta.clean_func(tok)
+            yield tok
 
-        tok: Any = meta.token_object(
-            start_pos=pos_start,
-            end_pos=pos_end,
-            filename=text.filename,
-            body=body,
-            type_=getattr(meta.token_type, tokenname) or meta.token_type.NONE
-        )
-        if callable(meta.clean_func):
-            meta.clean_func(tok)
+
+def exp_tokenize(text: Text, pattern: str = EXPMULTIPATTERN,
+                 meta: TokenMeta = TokenMeta(
+                     token_object=ExpToken,
+                     token_type=ExpTokenType,
+                     clean_func=exp_clean,
+                 ), text_offset: int = 0) -> Generator[ExpToken]:
+    """ Token generator for expressions from text """
+    for tok in tokenize(text, pattern, meta, text_offset, False):
+        assert isinstance(tok, ExpToken), \
+            f'exp_tokenizer encounter a wrong type "{type(tok)}", '\
+            '"ExpToken" expected'
         yield tok

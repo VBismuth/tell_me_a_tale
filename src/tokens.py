@@ -20,7 +20,7 @@ Contains Pos and Token structures and TokenType enum
 """
 
 from enum import Enum, auto as iota
-from typing import Callable, Any
+from typing import Callable, Union, Optional, Type
 from dataclasses import dataclass
 
 from .text import Pos
@@ -77,9 +77,46 @@ class Token:
                 if len(self.body) >= 30 else ']'))
 
 
+class ExpTokenType(Enum):
+    """ Expression tokens """
+    NONE    = 0
+    PLUS    = iota()
+    MINUS   = iota()
+    MULT    = iota()
+    DIV     = iota()
+    INTDIV  = iota()
+    MOD     = iota()
+    POW     = iota()
+    LPAREN  = iota()
+    RPAREN  = iota()
+    NUMBER  = iota()
+    IDENT   = iota()
+    KEYWORD = iota()
+
+    COUNT   = iota()
+
+
+@dataclass
+class ExpToken(Token):
+    """ Token structure for expressions """
+    type_: Enum = ExpTokenType.NONE
+
+    def __str__(self) -> str:
+        if self.type_ == ExpTokenType.NONE:
+            return "<[NONE]>"
+        if self.type_ == ExpTokenType.COUNT:
+            return "<[NOT A TOKEN]>"
+        return (f"<[{self.type_.name}:{self.body[:30]}" + ('<...>]>'
+                if len(self.body) >= 30 else ']>'))
+
+
+AnyTokenType = Union[TokenType, ExpTokenType]
+AnyToken = Union[Token, ExpToken]
+
+
 @dataclass
 class TokenMeta:
     """ Token metadata """
-    token_object: type[Any]  = Token
-    token_type: type[Any] = TokenType
-    clean_func: Callable[[Any], None] | None = None
+    token_object: Type[AnyToken]  = Token
+    token_type: Type[AnyTokenType] = TokenType
+    clean_func: Optional[Callable[[AnyToken], None]] = None

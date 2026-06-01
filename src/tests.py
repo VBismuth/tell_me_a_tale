@@ -2,9 +2,8 @@
 from unittest import TestCase, main as unittestmain
 
 from .text import Text, Pos
-from .tokens import Token, TokenType
-from .lexer import tokenize
-from .expressions import exp_tokenize, ExpToken, ExpTokenType
+from .tokens import Token, TokenType, ExpToken, ExpTokenType, AnyToken
+from .lexer import tokenize, exp_tokenize
 
 
 # !!START!!
@@ -19,7 +18,7 @@ class TestTokenize(TestCase):
 
     def test_tokenize_output(self) -> None:
         """ Checks if output is correct """
-        tokens: list[Token] = list(tokenize(self.text))
+        tokens: list[Token] = list(tokenize(self.text, tokenize_expr=False))
 
         result_str: str = ', '.join([str(token) for token in tokens])
 
@@ -30,20 +29,20 @@ class TestTokenize(TestCase):
 
     def test_tokenize_not_empty(self) -> None:
         """ Checks if tokens are generated """
-        tokens: list[Token] = list(tokenize(self.text))
+        tokens: list[Token] = list(tokenize(self.text, tokenize_expr=False))
         self.assertGreater(len(tokens), 0,
                            "Tokens was not generated")
 
     def test_tokenize_right_size(self) -> None:
         """ Checks if tokens are generated of right size """
-        tokens: list[Token] = list(tokenize(self.text))
+        tokens: list[Token] = list(tokenize(self.text, tokenize_expr=False))
         expected_size: int = 1
         self.assertEqual(len(tokens), expected_size,
                          "Number of tokens mismatch")
 
     def test_tokenize_returns_expected_types(self) -> None:
         """ Checks if type is correct """
-        tokens: list[Token] = list(tokenize(self.text))
+        tokens: list[Token] = list(tokenize(self.text, tokenize_expr=False))
         for token in tokens:
             self.assertIsInstance(token.type_, TokenType,
                                   f"Token {str(token)} type is "
@@ -68,7 +67,7 @@ class TestExpTokenize(TestCase):
         expected_str: str =\
             '<[NUMBER:8]>, <[MOD:%]>, <[NUMBER:3]>, <[PLUS:+]>, '\
             '<[NUMBER:4]>, <[DIV:/]>, <[LPAREN:(]>, <[NUMBER:3]>, <[MINUS:-]>'\
-            ', <[NUMBER:2]>, <[POW:^]>, <[NUMBER:2]>, <[KEYWORD:*]>, '\
+            ', <[NUMBER:2]>, <[POW:^]>, <[NUMBER:2]>, <[MULT:*]>, '\
             '<[NUMBER:8]>, <[RPAREN:)]>, <[INTDIV://]>, <[NUMBER:8.9]>, '\
             '<[PLUS:+]>, <[IDENT:Something]>, <[DIV:/]>, <[KEYWORD:exp]>, '\
             '<[LPAREN:(]>, <[NUMBER:3.8]>, <[RPAREN:)]>'

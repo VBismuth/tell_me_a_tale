@@ -23,14 +23,13 @@ SOURCE_SCHEME: list[str] = [
     'errors',
     'tokens',
     'lexer',
-    'expressions',
     'ast',
     'parser',
     'tests',
 ]
-INCLUDES: dict[list[str]] = {
+INCLUDES: dict[str, list[str]] = {
     're': [INCLUDE_AS_MODULE],
-    'typing': ['Generator', 'Callable', 'Any'],
+    'typing': ['Generator', 'Callable', 'Union', 'Optional', 'Type'],
     'dataclasses': ['dataclass'],
     'enum': ['Enum', 'auto as iota'],
     'unittest': ['TestCase', 'main as unittestmain']
