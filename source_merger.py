@@ -23,7 +23,7 @@ SOURCE_SCHEME: list[str] = [
     'errors',
     'tokens',
     'lexer',
-    'ast',
+    'ast_',
     'parser',
     'tests',
 ]
