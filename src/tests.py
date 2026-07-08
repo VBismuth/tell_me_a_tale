@@ -1,9 +1,11 @@
 """ TMT tests """
 from unittest import TestCase, main as unittestmain
+from typing import Any, get_args as type_get_args
 
 from .text import Text, Pos
 from .tokens import Token, TokenType, ExpToken, ExpTokenType, AnyToken
 from .lexer import tokenize, exp_tokenize
+from .ast_ import ast_from_dict, ast_to_dict, AstTypes
 
 
 # !!START!!
@@ -95,3 +97,65 @@ class TestExpTokenize(TestCase):
             self.assertIsInstance(token.type_, ExpTokenType,
                                   f"Token {str(token)} type is "
                                   f"incorrect")
+
+
+class TestAst(TestCase):
+    """ Test AST """
+
+    def setUp(self) -> None:
+        self.expected_dict: dict[str, Any] = {
+            "type": "Program",
+            "filename": "test.tmt",
+            "filepath": "/home/test/src",
+            "source": "_1 + 2_",
+            "body": [
+                {"type": "BinaryOperation",
+                 "position": [
+                    {"type": "Pos",
+                     "line": 1,
+                     "column": 2,
+                     "index": 1},
+                    {"type": "Pos",
+                     "line": 1,
+                     "column": 6,
+                     "index": 5}],
+                 "operator": "+",
+                 "left": {
+                    "type": "Literal",
+                    "value": "1",
+                    "valtype": {
+                        "type": "DataType",
+                        "name": "number",
+                        "subtype": "i32"}},
+                 "right": {
+                     "type": "Literal",
+                     "value": "2",
+                     "valtype": {
+                         "type": "DataType",
+                         "name": "number",
+                         "subtype": "i32"}}}]}
+
+    def test_ast_load_empty(self) -> None:
+        """ Test try loading empty """
+        res = ast_from_dict({})
+        self.assertIsNone(res, 'Loading from empty dict returned something')
+
+    def test_ast_dump_empty(self) -> None:
+        """ Test try dumping empty """
+        res = ast_to_dict(None)
+        self.assertIsNone(res, 'Dumping None returned something')
+
+    def test_ast_roundabout(self) -> None:
+        """ Test ast loading and dumping """
+        target_dict: dict[str, Any] = self.expected_dict.copy()
+        converted: AstTypes = ast_from_dict(target_dict)
+        self.assertIsNotNone(converted, 'Converted ast dict is None')
+        test_dict: dict[str, Any] = ast_to_dict(converted) or {}
+        self.assertIsNotNone(test_dict, 'Converted ast dict is None')
+        self.assertDictEqual(target_dict, test_dict,
+                             'AST dump+load cycle is incorrect')
+# !!STOP!!
+
+
+if __name__ == '__main__':
+    unittestmain(verbosity=2)

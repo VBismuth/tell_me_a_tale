@@ -29,7 +29,9 @@ SOURCE_SCHEME: list[str] = [
 ]
 INCLUDES: dict[str, list[str]] = {
     're': [INCLUDE_AS_MODULE],
-    'typing': ['Generator', 'Callable', 'Union', 'Optional', 'Type'],
+    'typing': ['Generator', 'Callable', 'Union',
+               'Optional', 'Type', 'Any',
+               'get_args as type_get_args'],
     'dataclasses': ['dataclass'],
     'enum': ['Enum', 'auto as iota'],
     'unittest': ['TestCase', 'main as unittestmain']
@@ -54,7 +56,7 @@ HEADER_TEXT: str = '''# -*- coding: utf8 -*-
 """ This is full source of the Storyteller - a TMT interpreter """
 '''
 FOOTER_TEXT: str = '''if __name__ == "__main__":
-    unittestmain()
+    unittestmain(verbosity=2)
 '''
 
 
