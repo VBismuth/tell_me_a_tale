@@ -118,7 +118,7 @@ class TestAst(TestCase):
                     {"type": "Pos",
                      "line": 1,
                      "column": 6,
-                     "index": 5}],
+                     "index": 5}, "__tuple__"],
                  "operator": "+",
                  "left": {
                     "type": "Literal",

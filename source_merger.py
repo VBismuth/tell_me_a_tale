@@ -1,6 +1,6 @@
 """ Merges several source py files into one """
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict
 
 
 # Essentials
@@ -17,7 +17,7 @@ BLANK_LINES: str = '\n' * 3
 TARGET_DIR: Path = Path('tmp')
 TARGET: str = 'storyteller'
 SOURCE_DIR: Path = Path('src')
-SOURCE_SCHEME: list[str] = [
+SOURCE_SCHEME: List[str] = [
     '__init__',
     'text',
     'errors',
@@ -27,10 +27,11 @@ SOURCE_SCHEME: list[str] = [
     'parser',
     'tests',
 ]
-INCLUDES: dict[str, list[str]] = {
+INCLUDES: Dict[str, List[str]] = {
     're': [INCLUDE_AS_MODULE],
     'typing': ['Generator', 'Callable', 'Union',
                'Optional', 'Type', 'Any',
+               'Tuple', 'List', 'Dict',
                'get_args as type_get_args'],
     'dataclasses': ['dataclass'],
     'enum': ['Enum', 'auto as iota'],

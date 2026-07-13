@@ -18,7 +18,11 @@
 """ Abstract Syntax Tree for TMT """
 
 from dataclasses import dataclass
-from typing import Union, Optional, Any, get_args as type_get_args
+from typing import (
+    Union, Optional, Any,
+    Tuple, List, Dict,
+    get_args as type_get_args
+)
 
 from .text import Text, Pos
 
@@ -47,23 +51,23 @@ class Literal:
 @dataclass
 class ListLiteral:
     """ Array of expresions """
-    values: list[Expression]
+    values: List[Expression]
 
 
 @dataclass
 class TMTImport:
     """ Import C lib or TMT module """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     name: str
     file: str
-    imported_names: list[Identifier]
+    imported_names: List[Identifier]
     is_ffi: bool = False
 
 
 @dataclass
 class BinaryOperation:
     """ Math operations or comparison on two operands """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     operator: str
     left: Expression
     right: Expression
@@ -72,7 +76,7 @@ class BinaryOperation:
 @dataclass
 class UnaryOperation:
     """ Single operation like '-1' or 'not true' """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     operator: str
     operand: Expression
 
@@ -80,7 +84,7 @@ class UnaryOperation:
 @dataclass
 class LogicOperation:
     """ Logic operation like 'a and b' """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     operator: str
     left: Expression
     right: Expression
@@ -89,7 +93,7 @@ class LogicOperation:
 @dataclass
 class VariableDeclaration:
     """ Variable declaration in TMT. Requires type """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     name: Identifier
     datatype: DataType
     assignment: Expression
@@ -98,7 +102,7 @@ class VariableDeclaration:
 @dataclass
 class ConstantDeclaration:
     """ Same as variable, but immutable and can be optimized in expressions """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     datatype: DataType
     name: Identifier
     assignment: Expression
@@ -107,7 +111,7 @@ class ConstantDeclaration:
 @dataclass
 class VariableAssignment:
     """ Assign variable to expression """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     left: Identifier
     right: Expression
 
@@ -115,63 +119,63 @@ class VariableAssignment:
 @dataclass
 class FunctionDefinition:
     """ Represents a function structure in TMT """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     name: Identifier
     returntype: DataType
-    args: list[list[Identifier | DataType]]
-    body: list[Statement]
+    args: List[Tuple[Identifier, DataType]]
+    body: List[Statement]
 
 
 @dataclass
 class FunctionCall:
     """ Calling defined or builtin function """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     name: Identifier
-    args: list[Expression]
+    args: List[Expression]
 
 
 @dataclass
 class Branch:
     """ Basic control flow with conditions """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     condition: Expression
-    if_body: list[Statement]
-    else_body: list[Statement]
+    if_body: List[Statement]
+    else_body: List[Statement]
 
 
 @dataclass
 class WhileLoop:
     """ Basic loop. Also it is Until with negative condition """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     condition: Expression
-    body: list[Statement]
+    body: List[Statement]
 
 
 @dataclass
 class ForLoop:
     """ WhileLoop but with batteries """
-    position: list[Pos]
-    vars: list[Identifier]
+    position: Tuple[Pos, Pos]
+    vars: List[Identifier]
     iterable: Expression
-    body: list[Statement]
+    body: List[Statement]
 
 
 @dataclass
 class ContinueStatement:
     """ Jump to the next iteration in a loop """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
 
 
 @dataclass
 class BreakStatement:
     """ Jump out of a loop """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
 
 
 @dataclass
 class Range:
     """ Range for slices, list assignment and iterables in ForLoop """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     range_type: str  # inclusive or exclusive
     range_from: Expression
     range_to: Expression
@@ -182,7 +186,7 @@ class Range:
 @dataclass
 class IndexAccess:
     """ Accessing values from list """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     container: Expression
     index: Expression
 
@@ -190,7 +194,7 @@ class IndexAccess:
 @dataclass
 class ReturnStatement:
     """ Return value or None in functions """
-    position: list[Pos]
+    position: Tuple[Pos, Pos]
     value: Optional[Expression] = None
 
 
@@ -200,7 +204,7 @@ class Program:
     filename: str
     filepath: str
     source: Text
-    body: list[Statement]
+    body: List[Statement]
 
 
 Expression = Union[
@@ -233,17 +237,20 @@ AstTypes = Union[Node, Pos, Text]
 AST_TYPES_MAP = {cls.__name__: cls for cls in type_get_args(AstTypes)}
 
 
-def ast_to_dict(node: AstTypes | None) -> dict[str, Any] | None:
+def ast_to_dict(node: AstTypes | None) -> Dict[str, Any] | None:
     """ Convert ast to dict """
     if not isinstance(node, type_get_args(AstTypes)) or\
             not hasattr(node, '__dataclass_fields__'):
         return None
-    res: dict[str, Any] = {'type': node.__class__.__name__}
+    res: Dict[str, Any] = {'type': node.__class__.__name__}
     for field_name in node.__dataclass_fields__:
         field = getattr(node, field_name)
         if isinstance(field, type_get_args(AstTypes)):
             res[field_name] = ast_to_dict(field)
-        elif isinstance(field, list | tuple):
+        elif isinstance(field, tuple):
+            res[field_name] = [ast_to_dict(item) for item in field]
+            res[field_name].append('__tuple__')
+        elif isinstance(field, list):
             res[field_name] = [ast_to_dict(item) for item in field]
         else:
             res[field_name] = field
@@ -265,7 +272,11 @@ def ast_from_dict(obj: dict[str, Any] | Any) -> AstTypes | Any:
             if 'type' not in value:
                 continue
             new_fields[field] = ast_from_dict(value)
-        elif isinstance(value, list):
+        elif isinstance(value, list) and '__tuple__' in value:
+            new_fields[field] = tuple(
+                ast_from_dict(item) for item in value
+                if item != '__tuple__')
+        elif isinstance(value, list) and '__tuple__' not in value:
             new_fields[field] = [ast_from_dict(item) for item in value]
     res: AstTypes = AST_TYPES_MAP[obj_type](**new_fields)
     return res
