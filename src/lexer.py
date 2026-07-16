@@ -29,18 +29,16 @@ from .tokens import (
 from .text import Text, Pos
 
 # !!START!!
-# TODO: if common keyword used outside of context, like 'about' outside
-# of 'tell me' then it should be connected to string
-keywords = sorted((
-    'this is', 'that was', 'a tale', 'an actor', 'a constant', 'a pointer',
-    'a list', 'a dict', 'of kind', 'of type', 'there was', 'there is', 'for',
-    'in', 'about', 'in which', 'that is', 'become', 'and', 'or', 'not',
-    'say ', 'tell me', 'telling me', 'the meaning of', 'should listen to me',
-    'if', 'then', 'otherwise', 'else', 'that\'s it', 'self',
-    'while', 'do ', 'until', 'repeat', 'so it begins', 'the end',
-    'alias', 'as ', 'cast', 'append book', 'visit library', 'from ',
-    'read from file', 'rewrite to file', 'append to file',
-), key=len, reverse=True)
+keywords = (
+    'should listen to me', 'rewrite to file', 'the meaning of',
+    'read from file', 'append to file', 'visit library', 'so it begins',
+    'append book', 'a constant', 'telling me', 'a pointer', 'there was',
+    'otherwise', "that's it", 'that was', 'an actor', 'there is', 'in which',
+    'this is', 'of kind', 'of type', 'that is', 'tell me', 'the end',
+    'a tale', 'a list', 'a dict', 'become', 'repeat', 'about', 'while',
+    'until', 'alias', 'from ', 'say ', 'then', 'else', 'self', 'cast',
+    'for', 'and', 'not', 'do ', 'as ', 'in', 'or', 'if'
+)
 
 types = (
     'number', 'string', 'boolean', 'none',
@@ -56,7 +54,7 @@ token_patterns = {
     'EXPRESSION':   r'_[^\n]*?_',
     'NUMBER':       r'[+-]?[\d]+(?:\.[\d]+)?(?:e[+-]?\d+)?',
     'RANGE':        r'\.\.=?',
-    'KEYWORD':      r'\s|'.join(keywords) + r'\s',
+    'KEYWORD':      r'\b' + r'\b|'.join(keywords) + r'\b',
     'LBRACE':       r'\{',
     'RBRACE':       r'\}',
     'LBRACKET':     r'\[',
@@ -135,7 +133,6 @@ def clean_token(tok: AnyToken) -> None:
         tok.type_ = TokenType.KEYWORD
 
 
-# TODO: fix tokens for keywords
 def tokenize(text: Text, pattern: str = MULTIPATTERN,
              meta: TokenMeta = TokenMeta(
                  clean_func=clean_token),
