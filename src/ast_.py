@@ -35,10 +35,25 @@ class DataType:
     subtype: Optional[str] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class Identifier:
     """ For function or variable name """
     name: str
+
+
+@dataclass
+class Variable:
+    """ Represents a variable structure in TMT """
+    name: Identifier
+    datatype: DataType
+    value: str  # value represented as str, but can be processed using datatype
+    _mutable: bool = True
+
+
+@dataclass
+class Constant(Variable):
+    """ Represents a constant structure in TMT, same as Variable """
+    _mutable: bool = False
 
 
 @dataclass
@@ -60,7 +75,7 @@ class TMTImport:
     position: Tuple[Pos, Pos]
     name: str
     file: str
-    imported_names: List[Identifier]
+    imported: Dict[Identifier, FunctionDefinition | Constant]
     is_ffi: bool = False
 
 
@@ -75,7 +90,7 @@ class BinaryOperation:
 
 @dataclass
 class UnaryOperation:
-    """ Single operation like '-1' or 'not true' """
+    """ Single operation like '-(1+2)' or 'not true' """
     position: Tuple[Pos, Pos]
     operator: str
     operand: Expression
@@ -94,8 +109,7 @@ class LogicOperation:
 class VariableDeclaration:
     """ Variable declaration in TMT. Requires type """
     position: Tuple[Pos, Pos]
-    name: Identifier
-    datatype: DataType
+    object: Variable
     assignment: Expression
 
 
@@ -103,8 +117,7 @@ class VariableDeclaration:
 class ConstantDeclaration:
     """ Same as variable, but immutable and can be optimized in expressions """
     position: Tuple[Pos, Pos]
-    datatype: DataType
-    name: Identifier
+    object: Constant
     assignment: Expression
 
 
@@ -112,7 +125,7 @@ class ConstantDeclaration:
 class VariableAssignment:
     """ Assign variable to expression """
     position: Tuple[Pos, Pos]
-    left: Identifier
+    left: Variable
     right: Expression
 
 
@@ -122,7 +135,7 @@ class FunctionDefinition:
     position: Tuple[Pos, Pos]
     name: Identifier
     returntype: DataType
-    args: List[Tuple[Identifier, DataType]]
+    args: List[Variable]
     body: List[Statement]
 
 

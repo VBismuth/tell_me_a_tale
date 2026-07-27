@@ -33,7 +33,7 @@ INCLUDES: Dict[str, List[str]] = {
                'Optional', 'Type', 'Any',
                'Tuple', 'List', 'Dict',
                'get_args as type_get_args'],
-    'dataclasses': ['dataclass'],
+    'dataclasses': ['dataclass', 'field'],
     'enum': ['Enum', 'auto as iota'],
     'unittest': ['TestCase', 'main as unittestmain']
 }
@@ -81,7 +81,7 @@ def _extract_content(text: str) -> str:
 
 def _merger(first: str, second: str, filename: Optional[str] = None) -> str:
     if isinstance(filename, str):
-        second = f'# {filename + PYTHON_EXT}\n' + second
+        second = f'# --- {filename + PYTHON_EXT} --- #\n' + second
     return first + BLANK_LINES + second
 
 
