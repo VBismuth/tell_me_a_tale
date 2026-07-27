@@ -37,7 +37,7 @@ keywords = (
     'this is', 'of kind', 'of type', 'that is', 'tell me', 'the end',
     'a tale', 'a list', 'a dict', 'become', 'repeat', 'about', 'while',
     'until', 'alias', 'from ', 'say ', 'then', 'else', 'self', 'cast',
-    'for', 'and', 'not', 'do ', 'as ', 'in', 'or', 'if'
+    'for', 'and', 'not', 'do', 'as', 'in', 'or', 'if'
 )
 
 types = (
