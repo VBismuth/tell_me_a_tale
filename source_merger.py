@@ -1,6 +1,7 @@
 """ Merges several source py files into one """
 from pathlib import Path
 from typing import Optional, List, Dict
+from sys import stderr
 
 
 # Essentials
@@ -29,6 +30,7 @@ SOURCE_SCHEME: List[str] = [
 ]
 INCLUDES: Dict[str, List[str]] = {
     're': [INCLUDE_AS_MODULE],
+    'sys': ['stderr', 'exit as sysexit'],
     'typing': ['Generator', 'Callable', 'Union',
                'Optional', 'Type', 'Any',
                'Tuple', 'List', 'Dict',
@@ -76,6 +78,7 @@ def _extract_content(text: str) -> str:
     start_pos: int = text.find(begin_ptrn) + (len(begin_ptrn) + 1
                                               if begin_ptrn in text else 0)
     end_pos: int = text.rfind(end_ptrn)
+    end_pos = text.rfind('\n', 0, end_pos) if end_pos >= 0 else end_pos
     return text[start_pos:end_pos]
 
 
@@ -90,7 +93,8 @@ def _load_file(file: Path) -> str:
     if file.exists():
         res = file.read_text()
     else:
-        print('WARN: File', str(file), 'does not exists')
+        print('\033[93mWARN: File', str(file), 'does not exist\033[0m',  # ]]
+              file=stderr)
     return res
 
 
@@ -109,7 +113,9 @@ def _main() -> None:
             continue
         content: str = _extract_content(loaded)
         if not content:
-            print('WARN:', source, 'has no marked content')
+            print('\033[93mWARN:', source,  # ]
+                  'has no marked content\033[0m',  # ]
+                  file=stderr)
             continue
         merged_file = _merger(merged_file, content, file)
         print('INFO: merged', source, 'successfuly')
