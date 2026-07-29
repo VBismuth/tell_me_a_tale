@@ -34,13 +34,22 @@ class Pos:
         self.column = other.column
         self.index = other.index
 
+    def copy(self) -> "Pos":
+        """ Copy self """
+        return Pos(
+            line=self.line,
+            column=self.column,
+            index=self.index
+        )
+
 
 @dataclass
 class Text:
     """ Text structure """
     current_pos: Pos
     text: str
-    filename: str = '<string>'  # TODO: from filename to full path
+    filename: str = '<string>'
+    filepath: str = ''
 
     def get_pos(self, idx: int = 0,
                 ignore_current_idx: bool = False) -> tuple[int, int]:
@@ -74,3 +83,16 @@ class Text:
         if not self.text:
             return ''
         return self.text.split('\n')[max(line_n - 1, 0)]
+
+    def get_slice(self, start_pos: Pos, end_pos: Pos) -> str:
+        """ Get slice from text from start to end positions """
+        return self.text[start_pos.index:end_pos.index]
+
+    def copy(self) -> Text:
+        """ Copy self """
+        return Text(
+            current_pos=self.current_pos.copy(),
+            text=self.text,
+            filename=self.filename,
+            filepath=self.filepath
+        )

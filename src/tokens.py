@@ -76,6 +76,16 @@ class Token:
         return (f"[{self.type_.name}:{self.body[:30]}" + ('<...>]'
                 if len(self.body) >= 30 else ']'))
 
+    def copy(self) -> Token:
+        """ Copy self """
+        return Token(
+            filename=self.filename,
+            start_pos=self.start_pos.copy(),
+            end_pos=self.end_pos.copy(),
+            type_=self.type_,
+            body=self.body
+        )
+
 
 class ExpTokenType(Enum):
     """ Expression tokens """
