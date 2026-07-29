@@ -24,7 +24,7 @@ from typing import (
     get_args as type_get_args
 )
 
-from .text import Text, Pos
+from .text import Pos
 
 
 # !!START!!
@@ -216,7 +216,6 @@ class Program:
     """ Main node for a program """
     filename: str
     filepath: str
-    source: Text
     body: List[Statement]
 
 
@@ -245,7 +244,7 @@ Statement = Union[
     BreakStatement,
 ]
 Node = Union[Expression, Statement, Program, DataType]
-AstTypes = Union[Node, Pos, Text]
+AstTypes = Union[Node, Pos]
 
 AST_TYPES_MAP = {cls.__name__: cls for cls in type_get_args(AstTypes)}
 

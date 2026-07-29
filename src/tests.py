@@ -17,7 +17,6 @@ class TestAst(TestCase):
             "type": "Program",
             "filename": "test.tmt",
             "filepath": "/home/test/src",
-            "source": "_1 + 2_",
             "body": [
                 {"type": "BinaryOperation",
                  "position": [
