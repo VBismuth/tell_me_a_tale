@@ -18,6 +18,8 @@
 """ Printing error messages """
 
 from enum import Enum
+from typing import Any
+from sys import stderr
 
 from .text import Text, Pos
 from .tokens import AnyToken
@@ -102,3 +104,19 @@ def token_error(token: AnyToken,
                 message_color: Colors = Colors.FG_RED) -> None:
     """ Print error for token """
     error_message(token.start_pos, token.end_pos, text, message, message_color)
+
+
+def error_print(*args: Any, **kwargs: Any) -> None:
+    """ Print error message to stderr """
+    args = (Colors.FG_RED.value,) + args
+    args = args + (Colors.RESET.value,)
+    kwargs['file'] = stderr
+    print(*args, **kwargs)
+
+
+def warn_print(*args: Any, **kwargs: Any) -> None:
+    """ Print warning message to stderr """
+    args = (Colors.FG_YELLOW.value,) + args
+    args = args + (Colors.RESET.value,)
+    kwargs['file'] = stderr
+    print(*args, **kwargs)
