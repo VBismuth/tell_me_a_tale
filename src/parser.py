@@ -20,20 +20,43 @@
 from dataclasses import dataclass, field
 from typing import List, Dict, Union, get_args as type_get_args
 from enum import Enum, auto as iota
-from sys import stderr, exit as sysexit
+from sys import exit as sysexit
 
 from .ast_ import (
     Identifier, Constant, Variable,
-    FunctionDefinition, Program, Node
+    DataType, Literal, Pass,
+    FunctionDefinition, FunctionCall,
+    Program, Node,
 )
 from .tokens import Token, TokenType
-from .errors import error_print, warn_print
+from .errors import error_print, warn_print, token_error
 from .text import Text
+from . import TMT_SELF, TMT_VERSION
 
 
 # !!START!!
 # TODO: for import purposes should form dependency tree for the IMPORT
 TmtObject = Union[Constant, Variable, FunctionDefinition]
+SELF_ID_HEX: str = '212153454c462121'
+
+TMT_DEFAULT_CONSTS: Dict[Identifier, Constant] = {
+    Identifier("VERSION"): Constant(Identifier("VERSION"),
+                                    DataType("text"),
+                                    TMT_VERSION),
+}
+TMT_DEFAULT_VARS: Dict[Identifier, Variable] = {
+    Identifier("SELF"):    Variable(Identifier("SELF"),
+                                    DataType("text"),
+                                    TMT_SELF.replace(
+                                        bytes.fromhex(SELF_ID_HEX)\
+                                             .decode('utf8'),
+                                        TMT_SELF.replace("\\", r"\\")\
+                                                .replace("'", "\\'"))
+                                    ),
+    Identifier("ERROR"):   Variable(Identifier("ERROR"),
+                                    DataType("number", 'u8'),
+                                    '0'),
+}
 
 
 @dataclass
@@ -96,12 +119,11 @@ class TmtObjectsTrack:
         return isinstance(res, Identifier) and res in self.names
 
 
-class ParseMode(Enum):
+class ParseError(Enum):
     """ Parser Modes to decide what to do """
-    DEFAULT    = 0
-    FUNCTION   = iota()
-    EXPRESSION = iota()
-    ARGUMENTS  = iota()
+    OK        = 0
+    TOKENERR  = iota()
+    SYNTAXERR = iota()
 
 
 @dataclass
@@ -109,14 +131,14 @@ class ParserContext:
     """ Shared parser context """
     source: Text
     tokens: List[Token]
-    pointer: int
+    pointer: int = 0
     unmatched_braces: List[Token] = field(default_factory=list)
-    mode: ParseMode = ParseMode.DEFAULT
+    perror: ParseError = ParseError.OK
     objects: TmtObjectsTrack = field(default_factory=TmtObjectsTrack)
 
     def get_token(self) -> Token | None:
         """ Returns current token if it exists """
-        if not self.tokens:
+        if not self.tokens or self.pointer >= len(self.tokens):
             return None
         return self.tokens[self.pointer]
 
@@ -124,9 +146,10 @@ class ParserContext:
         """ Move pointer and return previous n token
         if it exists, None otherwise """
         if self.pointer + n >= len(self.tokens):
-            warn_print("WARN: ParserContext.next: Context next token "
-                       "pointer out of boundaries for",
-                       self.source.filename)
+            # warn_print("WARN: ParserContext.next: Context next token "
+            #            "pointer out of boundaries for",
+            #            self.source.file)
+            self.pointer = len(self.tokens)
             return None
         self.pointer += n
         return self.get_token()
@@ -135,9 +158,10 @@ class ParserContext:
         """ Move pointer and return previous n token
         if it exists, None otherwise """
         if len(self.tokens) < self.pointer - n < 0:
-            warn_print("WARN: ParserContext.prev: Context previous token "
-                       "pointer out of boundaries for",
-                       self.source.filename)
+            # warn_print("WARN: ParserContext.prev: Context previous token "
+            #            "pointer out of boundaries for",
+            #            self.source.file)
+            self.pointer = 0
             return None
         self.pointer -= n
         return self.get_token()
@@ -163,24 +187,92 @@ def concatinate_words(ctx: ParserContext) -> Token:
     res: Token = tok.copy()
     res.type_ = TokenType.STRING
     tok = ctx.next()
+    comments: List[Token] = []
     while tok and tok.type_ not in\
-            (TokenType.COLON, TokenType.TERMINATOR):
+            (TokenType.COMMA, TokenType.TERMINATOR,
+             TokenType.COLON, ):
+        if tok.type_ is TokenType.COMMENT:
+            comments.append(tok)
+            tok = ctx.next()
+            continue
         res.end_pos.update(tok.end_pos)
         res.body = ctx.source.get_slice(res.start_pos, res.end_pos)
         tok = ctx.next()
+    # Clean comments out of the string
+    for comm in comments:
+        res.body = res.body.replace(comm.body, '')
+    print(res.body)
     return res
 
 
-def process_keyword(ctx: ParserContext) -> Node:
-    """ Process keyword """
+def process_expression(ctx: ParserContext) -> None:
+    """ Process expression """
     raise NotImplementedError
+
+
+def process_args(ctx: ParserContext) -> None:
+    """ Process operator arguments """
+    raise NotImplementedError
+
+
+def process_operators(ctx: ParserContext) -> Node:
+    """ Process operators """
+    tok: Token | None = ctx.get_token()
+    res: Node = Pass()
+    if tok is None:
+        error_print("ERROR: parser: process_keyword "
+                    "got None.\nContext:", str(ctx))
+        ctx.perror = ParseError.TOKENERR
+        return res
+        # sysexit(1)
+    if tok.body == "Say":
+        res = FunctionCall((tok.start_pos, tok.end_pos),
+                           Identifier("PRINT"), [])
+        tok = ctx.next()
+        while tok and tok.type_ not in (TokenType.TERMINATOR,):
+            if not tok:
+                break
+            token_error(tok, ctx.source,
+                        "Unexpected Say argument "
+                        f"'{str(tok)}'")
+            ctx.perror = ParseError.SYNTAXERR
+            tok = ctx.next()
+        res.args.append(Literal('\n', DataType('text')))
+
+    elif tok.body == "Tell me":
+        res = FunctionCall((tok.start_pos, tok.end_pos),
+                           Identifier("PRINT"), [])
+        tok = ctx.next()
+        while tok and tok.type_ not in (TokenType.TERMINATOR,):
+            if not tok:
+                break
+            token_error(tok, ctx.source,
+                        "Unexpected Tell me argument "
+                        f"'{str(tok)}'")
+            ctx.perror = ParseError.SYNTAXERR
+            tok = ctx.next()
+    else:
+        token_error(tok, ctx.source,
+                    f"Unexpected keyword '{tok.body}'")
+        # sysexit(1)
+        ctx.perror = ParseError.SYNTAXERR
+        ctx.last()
+        ctx.next()
+    tok = ctx.last() if not ctx.get_token() else ctx.get_token()
+    assert tok is not None, "Sanity check"
+
+    if tok.type_ != TokenType.TERMINATOR:
+        token_error(tok, ctx.source,
+                    "Expected . or ; at the end")
+        ctx.perror = ParseError.SYNTAXERR
+    return res
+    # TODO: Complete
 
 
 def parse(ctx: ParserContext) -> Program:
     """ Parse tokens """
     res = Program(
-        filename=ctx.source.filename,
-        filepath=ctx.source.filepath,
+        file=ctx.source.file,
         body=[]
     )
 
@@ -188,12 +280,15 @@ def parse(ctx: ParserContext) -> Program:
     while tok:
         if tok.type_ == TokenType.WORD:
             concatinate_words(ctx)  # discard words
+            tok = ctx.next()
             continue
         if tok.type_ != TokenType.KEYWORD:
             tok = ctx.next()
             continue
-        processed: Node = process_keyword(ctx)
+        processed: Node = process_operators(ctx)
         if isinstance(processed, type_get_args(Node)):
             res.body.append(processed)
         tok = ctx.next()
+    if not res.body:
+        res.body = [Pass()]
     return res
