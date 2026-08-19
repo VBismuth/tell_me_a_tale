@@ -56,10 +56,13 @@ class Colors(Enum):
 
 def print_arrows(indent: int, size: int, color: Colors = Colors.RESET) -> None:
     """ Draw arrows """
+    if size < 1:
+        return
     if not isinstance(color, Colors):
         color = Colors.RESET
+    underline: str = '^' + '~' * (size - 1)
     print(color.value, end='')
-    print(DEFAULT_IDENT * indent + '^' * size)
+    print(DEFAULT_IDENT * indent + underline)
     print(Colors.RESET.value, end='')
 
 
@@ -69,7 +72,7 @@ def error_message(start_pos: Pos, end_pos: Pos,
     """ Print error message """
     if not isinstance(message_color, Colors):
         message_color = Colors.RESET
-    print(f'{text.filename}:{start_pos.line}:{start_pos.column} :: '
+    print(f'{text.file}:{start_pos.line}:{start_pos.column} :: '
           f'{message_color.value}{message}{Colors.RESET.value}')
     print(Colors.FG_MAGENTA.value, end='')
     line_num_size: int = len(str(max(start_pos.line, end_pos.line)))
