@@ -15,8 +15,7 @@ class TestAst(TestCase):
     def setUp(self) -> None:
         self.expected_dict: dict[str, Any] = {
             "type": "Program",
-            "filename": "test.tmt",
-            "filepath": "/home/test/src",
+            "file": "/pseudo/path/to/file.tmt",
             "body": [
                 {"type": "BinaryOperation",
                  "position": [

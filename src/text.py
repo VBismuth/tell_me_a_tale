@@ -48,8 +48,7 @@ class Text:
     """ Text structure """
     current_pos: Pos
     text: str
-    filename: str = '<string>'
-    filepath: str = ''
+    file: str = '<string>'
 
     def get_pos(self, idx: int = 0,
                 ignore_current_idx: bool = False) -> tuple[int, int]:
@@ -93,6 +92,14 @@ class Text:
         return Text(
             current_pos=self.current_pos.copy(),
             text=self.text,
-            filename=self.filename,
-            filepath=self.filepath
+            file=self.file
+        )
+
+    @staticmethod
+    def new(text: str, file: str = '<string>') -> "Text":
+        """ Create new instance of Text """
+        return Text(
+            current_pos=Pos(),
+            text=text,
+            file=file
         )

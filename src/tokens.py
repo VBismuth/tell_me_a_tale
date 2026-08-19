@@ -62,7 +62,7 @@ class TokenType(Enum):
 @dataclass
 class Token:
     """ Token structure """
-    filename: str
+    file: str
     start_pos: Pos
     end_pos: Pos
     type_: Enum = TokenType.NONE
@@ -79,7 +79,7 @@ class Token:
     def copy(self) -> Token:
         """ Copy self """
         return Token(
-            filename=self.filename,
+            file=self.file,
             start_pos=self.start_pos.copy(),
             end_pos=self.end_pos.copy(),
             type_=self.type_,

@@ -30,18 +30,18 @@ from .text import Text, Pos
 
 # !!START!!
 keywords = (
-    'should listen to me', 'rewrite to file', 'the meaning of',
-    'read from file', 'append to file', 'visit library', 'so it begins',
-    'append book', 'a constant', 'telling me', 'a pointer', 'there was',
+    'should listen to me', 'should listen to', 'the meaning of',
+    'visit library', 'so it begins', 'tell warning', 'append book',
+    'tell error', 'a constant', 'telling me', 'a pointer', 'there was',
     'otherwise', "that's it", 'that was', 'an actor', 'there is', 'in which',
-    'this is', 'of kind', 'of type', 'that is', 'tell me', 'the end',
-    'a tale', 'a list', 'a dict', 'become', 'repeat', 'about', 'while',
-    'until', 'alias', 'from ', 'say ', 'then', 'else', 'self', 'cast',
-    'for', 'and', 'not', 'do', 'as', 'in', 'or', 'if'
+    'this is', 'of kind', 'of type', 'that is', 'tell me', 'the end', 'a tale',
+    'a list', 'a dict', 'become', 'repeat', 'about', 'while', 'until', 'alias',
+    'from ', 'quit', 'say', 'then', 'else', 'self', 'cast', 'tell', 'for',
+    'and', 'not', 'do', 'as', 'in', 'or', 'if'
 )
 
 types = (
-    'number', 'string', 'boolean', 'none',
+    'number', 'text', 'boolean', 'none',
 )
 
 # TODO: meta keywords like @LINKER -l:raylib.a
@@ -169,7 +169,7 @@ def tokenize(text: Text, pattern: str = MULTIPATTERN,
             tok: AnyToken = meta.token_object(
                 start_pos=pos_start,
                 end_pos=pos_end,
-                filename=text.filename,
+                file=text.file,
                 body=body,
                 type_=(getattr(meta.token_type, tokenname) or
                        meta.token_type.NONE)

@@ -31,7 +31,7 @@ from .text import Pos
 @dataclass
 class DataType:
     """ Types of TMT data are static """
-    name: str
+    name: str = 'none'
     subtype: Optional[str] = None
 
 
@@ -214,8 +214,7 @@ class ReturnStatement:
 @dataclass
 class Program:
     """ Main node for a program """
-    filename: str
-    filepath: str
+    file: str
     body: List[Statement]
 
 
