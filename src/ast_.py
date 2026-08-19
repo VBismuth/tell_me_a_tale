@@ -212,6 +212,11 @@ class ReturnStatement:
 
 
 @dataclass
+class Pass:
+    """ Stub for empty programm """
+
+
+@dataclass
 class Program:
     """ Main node for a program """
     file: str
@@ -230,6 +235,7 @@ Expression = Union[
     IndexAccess
 ]
 Statement = Union[
+    Pass,
     VariableDeclaration,
     ConstantDeclaration,
     VariableAssignment,
