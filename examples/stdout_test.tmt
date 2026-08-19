@@ -1,0 +1,4 @@
+--- Test builtin functions, that prints text to stdin ---
+Say this is not the end.  -- >this is not the end
+Say `this is not the end.`; -- >tis is not hte end.
+Tell me `And that's it\n`. -- >And that's it

@@ -1,0 +1,20 @@
+--- Reads file and outputs it to stdout, then outputs it to tmp.tmt ---
+
+This is "Hello Example" that should listen to `./00_hello.tmt`.
+
+If _$"ERROR"_ = _$"FILE READ ERROR"_
+Then
+    Tell error `Could not read file $"Hello Example": $"ERROR MESSAGE"\n`.
+    Quit _$"ERROR"_.
+That's it.
+
+
+Say the meaning of "Hello Example";
+
+Tell `./tmp.tmt` the meaning of "Hello Example".
+
+If _$"ERROR"_ = _$"FILE WRITE ERROR"_
+Then
+    Tell error `Could not write to file './tmp.tmt': `, the meaning of "ERROR MESSAGE", `\n`.
+    Quit _$"ERROR"_.
+That's it.

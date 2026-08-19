@@ -3,7 +3,7 @@
 -- Same as 'this is a tale "Greet" of kind none...'
 This is a tale "Greet" in which "Name" of kind string,
 So it begins,
-    Say `Hello, ` and the meaning of "Name".
+    Say `Hello, `, the meaning of "Name".
 The end.
 
 Tell me a tale "Greet" with "Victor". -- Output: Hello, Victor.
@@ -11,9 +11,9 @@ Tell me a tale "Greet" with "Victor". -- Output: Hello, Victor.
 -- Other way to define a function with name after type
 This is a tale of kind number=int about "Add" in which "A" of kind number=int, "B" of kind number=int.
 So it begins.
-    Let us know _$"A" + $"B"_.
+    Hand out _$"A" + $"B"_.
 The end.
 
 That is "Result" of kind number=int.
-Tell me a tale "Add" with 420, 270 for "Result".
+Tell "Result" a tale "Add" with 420, 270.
 Tell me the meaning of "Result".

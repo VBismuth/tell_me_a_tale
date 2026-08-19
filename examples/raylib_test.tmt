@@ -1,10 +1,11 @@
 --- Raylib test ---
 
 @LINKER -L../raylib/lib -l:raylib.a -lm
-Visit library "raylib".
+Visit foreign library "raylib".
 
 
 Alias number=i32 as int.
+Alias text as string.
 
 This is a tale "InitWindow"
 in which
@@ -18,7 +19,7 @@ This is a tale "EndDrawing" from "raylib".
 This is a tale "CloseWindow" from "raylib".
 
 Tell me a tale "InitWindow" with 800, 600, `Hello from TMT`.
-While you not telling me a tale "WindowShouldClose" do;
+While not telling a tale "WindowShouldClose" do;
     Tell me a tale "BeginDrawing".
     Tell me a tale "EndDrawing".
 The end.

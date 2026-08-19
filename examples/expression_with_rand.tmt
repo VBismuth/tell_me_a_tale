@@ -7,21 +7,21 @@ There is a "Hero Health" of kind number that is 100.
 -- The adventure begins
 This is a tale "Battle with the Dragon".
 So it begins.
-    Say `A fearsome dragon appears before ` and the meaning of "Hero Name".
+    Say `A fearsome dragon appears before `, the meaning of "Hero Name".
 
     -- Roll a dice (simulate randomness)
     There is a "Dice Roll" of kind number that is _randint(1, 6)_.
 
     If the meaning of "Dice Roll" is greater than 3,
     Then
-        Say `With a mighty swing, ` and the meaning of "Hero Name" and ` defeats the dragon!`.
+        Say `With a mighty swing, `, the meaning of "Hero Name" and ` defeats the dragon!`.
         Then "Hero Health" became _$"Hero Health" + 20_.
     Otherwise,
-        Say `The dragon breathes fire! ` and the meaning of "Hero Name" and ` takes damage.`.
+        Say `The dragon breathes fire! `, the meaning of "Hero Name" and ` takes damage.`.
         Then "Hero Health" became _$"Hero Health" - 30_.
     The end.
 
-    Say `Hero's health: ` and the meaning of "Hero Health".
+    Say `Hero's health: `, the meaning of "Hero Health".
 The end.
 
 -- Start the adventure
