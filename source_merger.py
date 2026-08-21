@@ -105,7 +105,7 @@ def _main() -> None:
         if INCLUDE_AS_MODULE in includes:
             merged_file += f'import {module}'
         else:
-            merged_file += f'from {module} import {', '.join(includes)}'
+            merged_file += f'from {module} import {", ".join(includes)}'
     for file in SOURCE_SCHEME:
         source: Path = SOURCE_DIR / (file + PYTHON_EXT)
         loaded: str = _load_file(source)
@@ -114,11 +114,11 @@ def _main() -> None:
         content: str = _extract_content(loaded)
         if not content:
             print('\033[93mWARN:', source,  # ]
-                  'has no marked content\033[0m',  # ]
+                  'has content or content is marked incorrectly\033[0m',  # ]
                   file=stderr)
             continue
         merged_file = _merger(merged_file, content, file)
-        print('INFO: merged', source, 'successfuly')
+        print('\033[34mINFO: merged', source, 'successfuly\033[0m')  # ]]
     merged_file += BLANK_LINES + FOOTER_TEXT
     if 'post_processing' in globals():
         merged_file = post_processing(merged_file)
@@ -126,7 +126,8 @@ def _main() -> None:
     target_file: Path = TARGET_DIR / (TARGET + PYTHON_EXT)
     target_file.touch(exist_ok=True)
     target_file.write_text(merged_file)
-    print('INFO: Merged to', str(target_file.absolute()))
+    print('\033[94mINFO: Merged to',  # ]
+          f'{str(target_file.absolute())}\033[0m')  # ]
 
 
 if __name__ == '__main__':
