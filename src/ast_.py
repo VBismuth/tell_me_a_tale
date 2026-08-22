@@ -261,16 +261,16 @@ def ast_to_dict(node: AstTypes | None) -> Dict[str, Any] | None:
         return None
     res: Dict[str, Any] = {'type': node.__class__.__name__}
     for field_name in node.__dataclass_fields__:
-        field = getattr(node, field_name)
-        if isinstance(field, type_get_args(AstTypes)):
-            res[field_name] = ast_to_dict(field)
-        elif isinstance(field, tuple):
-            res[field_name] = [ast_to_dict(item) for item in field]
+        ast_field = getattr(node, field_name)
+        if isinstance(ast_field, type_get_args(AstTypes)):
+            res[field_name] = ast_to_dict(ast_field)
+        elif isinstance(ast_field, tuple):
+            res[field_name] = [ast_to_dict(item) for item in ast_field]
             res[field_name].append('__tuple__')
-        elif isinstance(field, list):
-            res[field_name] = [ast_to_dict(item) for item in field]
+        elif isinstance(ast_field, list):
+            res[field_name] = [ast_to_dict(item) for item in ast_field]
         else:
-            res[field_name] = field
+            res[field_name] = ast_field
     return res
 
 
@@ -283,17 +283,17 @@ def ast_from_dict(obj: dict[str, Any] | Any) -> AstTypes | Any:
     obj_type = obj['type']
     new_fields: dict[str, Any] = {
         key: val for key, val in obj.items() if key != 'type'}
-    for field in new_fields:
-        value = new_fields[field]
+    for ast_field in new_fields:
+        value = new_fields[ast_field]
         if isinstance(value, dict):
             if 'type' not in value:
                 continue
-            new_fields[field] = ast_from_dict(value)
+            new_fields[ast_field] = ast_from_dict(value)
         elif isinstance(value, list) and '__tuple__' in value:
-            new_fields[field] = tuple(
+            new_fields[ast_field] = tuple(
                 ast_from_dict(item) for item in value
                 if item != '__tuple__')
         elif isinstance(value, list) and '__tuple__' not in value:
-            new_fields[field] = [ast_from_dict(item) for item in value]
+            new_fields[ast_field] = [ast_from_dict(item) for item in value]
     res: AstTypes = AST_TYPES_MAP[obj_type](**new_fields)
     return res
