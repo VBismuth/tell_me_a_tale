@@ -54,13 +54,16 @@ class Colors(Enum):
     RESET      = "\033[0m"   # ]
 
 
-def print_arrows(indent: int, size: int, color: Colors = Colors.RESET) -> None:
-    """ Draw arrows """
+def print_underline(indent: int, size: int,
+                    color: Colors = Colors.RESET,
+                    prepend_arrow: bool = True) -> None:
+    """ Prints underline '~' of set `size` minding `ident` and `color`
+        Also prepends arrow `^` by default, can be turned off """
     if size < 1:
         return
     if not isinstance(color, Colors):
         color = Colors.RESET
-    underline: str = '^' + '~' * (size - 1)
+    underline: str = '^' + '~' * (size - 1) if prepend_arrow else '~' * size
     print(color.value, end='')
     print(DEFAULT_IDENT * indent + underline)
     print(Colors.RESET.value, end='')
@@ -88,17 +91,18 @@ def error_message(start_pos: Pos, end_pos: Pos,
     else:
         arrows_size = len(text_part) - start_pos.column + 1
     print(' ' * (len(start_pos_num) - 1) + '|', end='')
-    print_arrows(start_pos.column - 1, arrows_size, message_color)
+    print_underline(start_pos.column - 1, arrows_size, message_color)
 
     for line in range(start_pos.line + 1, end_pos.line + 1):
         text_part = text.get_line(line)
         arrows_size = (
             len(text_part) if line != end_pos.line else end_pos.column - 1
         )
+        print(Colors.FG_MAGENTA.value, end='')
         print(f'{line:0{line_num_size}d} |', end='')
         print(text_part)
         print(' ' * (len(start_pos_num) - 1) + '|', end='')
-        print_arrows(0, arrows_size, message_color)
+        print_underline(0, arrows_size, message_color, False)
     print(Colors.RESET.value, end='')
 
 
