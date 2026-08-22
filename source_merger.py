@@ -9,6 +9,26 @@ def _format(text: str) -> str:
     return SPECIAL_FORMAT.format(text)
 
 
+def beautify_imports(to_include: List[str], treshold: int = 40) -> List[str]:
+    """ Make large imports more clean by spliting large chunks """
+    if not to_include:
+        return [INCLUDE_AS_MODULE]
+    ident: str = ' ' * 4
+    res: List[str] = [f'(\n{ident}{to_include[0]}']  # )
+    text_size: int = len(to_include[0]) + 2
+    for include in to_include[1:]:
+        if include == INCLUDE_AS_MODULE:
+            return [INCLUDE_AS_MODULE]
+        if text_size >= treshold:
+            res.append(f'\n{ident}{include}')
+            text_size = len(include) + 2
+            continue
+        res.append(include)
+        text_size += len(include) + 2
+    res[-1] = f'{res[-1]}\n)'
+    return res
+
+
 SPECIAL_FORMAT: str = '!!{}!!'
 INCLUDE_AS_MODULE: str = _format('module')
 PYTHON_EXT: str = '.py'
@@ -31,10 +51,11 @@ SOURCE_SCHEME: List[str] = [
 INCLUDES: Dict[str, List[str]] = {
     're': [INCLUDE_AS_MODULE],
     'sys': ['stderr', 'exit as sysexit'],
-    'typing': ['Generator', 'Callable', 'Union',
-               'Optional', 'Type', 'Any',
-               'Tuple', 'List', 'Dict',
-               'get_args as type_get_args'],
+    'typing': beautify_imports(
+        ['Generator', 'Callable', 'Union',
+         'Optional', 'Type', 'Any',
+         'Tuple', 'List', 'Dict',
+         'get_args as type_get_args']),
     'dataclasses': ['dataclass', 'field'],
     'enum': ['Enum', 'auto as iota'],
     'unittest': ['TestCase', 'main as unittestmain']
@@ -105,7 +126,8 @@ def _main() -> None:
         if INCLUDE_AS_MODULE in includes:
             merged_file += f'import {module}'
         else:
-            merged_file += f'from {module} import {", ".join(includes)}'
+            merged_file += f'from {module} import '\
+                f'{", ".join(includes).replace(', \n', ',\n')}'
     for file in SOURCE_SCHEME:
         source: Path = SOURCE_DIR / (file + PYTHON_EXT)
         loaded: str = _load_file(source)
