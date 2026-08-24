@@ -18,7 +18,7 @@
 """ Printing error messages """
 
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, TextIO
 from sys import stderr
 
 from .text import Text, Pos
@@ -56,7 +56,8 @@ class Colors(Enum):
 
 def print_underline(indent: int, size: int,
                     color: Colors = Colors.RESET,
-                    prepend_arrow: bool = True) -> None:
+                    prepend_arrow: bool = True,
+                    file: Optional[TextIO] = None) -> None:
     """ Prints underline '~' of set `size` minding `ident` and `color`
         Also prepends arrow `^` by default, can be turned off """
     if size < 1:
@@ -64,9 +65,9 @@ def print_underline(indent: int, size: int,
     if not isinstance(color, Colors):
         color = Colors.RESET
     underline: str = '^' + '~' * (size - 1) if prepend_arrow else '~' * size
-    print(color.value, end='')
-    print(DEFAULT_IDENT * indent + underline)
-    print(Colors.RESET.value, end='')
+    print(color.value, end='', file=file)
+    print(DEFAULT_IDENT * indent + underline, file=file)
+    print(Colors.RESET.value, end='', file=file)
 
 
 def error_message(start_pos: Pos, end_pos: Pos,
@@ -76,34 +77,36 @@ def error_message(start_pos: Pos, end_pos: Pos,
     if not isinstance(message_color, Colors):
         message_color = Colors.RESET
     print(f'{text.file}:{start_pos.line}:{start_pos.column} :: '
-          f'{message_color.value}{message}{Colors.RESET.value}')
-    print(Colors.FG_MAGENTA.value, end='')
+          f'{message_color.value}{message}{Colors.RESET.value}',
+          file=stderr)
+    print(Colors.FG_MAGENTA.value, end='', file=stderr)
     line_num_size: int = len(str(max(start_pos.line, end_pos.line)))
     start_pos_num: str = f'{start_pos.line:0{line_num_size}d} |'
     if start_pos.line > 1 and text.get_line(start_pos.line - 1):
-        print(f'{start_pos.line - 1:0{line_num_size}d} |', end='')
-        print(text.get_line(start_pos.line - 1))
+        print(f'{start_pos.line - 1:0{line_num_size}d} |', end='', file=stderr)
+        print(text.get_line(start_pos.line - 1), file=stderr)
     text_part: str = text.get_line(start_pos.line)
-    print(start_pos_num, end='')
-    print(text_part)
+    print(start_pos_num, end='', file=stderr)
+    print(text_part, file=stderr)
     if end_pos.line == start_pos.line:
         arrows_size: int = max(end_pos.column - start_pos.column, 1)
     else:
         arrows_size = len(text_part) - start_pos.column + 1
-    print(' ' * (len(start_pos_num) - 1) + '|', end='')
-    print_underline(start_pos.column - 1, arrows_size, message_color)
+    print(' ' * (len(start_pos_num) - 1) + '|', end='', file=stderr)
+    print_underline(start_pos.column - 1, arrows_size,
+                    message_color, file=stderr)
 
     for line in range(start_pos.line + 1, end_pos.line + 1):
         text_part = text.get_line(line)
         arrows_size = (
             len(text_part) if line != end_pos.line else end_pos.column - 1
         )
-        print(Colors.FG_MAGENTA.value, end='')
-        print(f'{line:0{line_num_size}d} |', end='')
-        print(text_part)
-        print(' ' * (len(start_pos_num) - 1) + '|', end='')
-        print_underline(0, arrows_size, message_color, False)
-    print(Colors.RESET.value, end='')
+        print(Colors.FG_MAGENTA.value, end='', file=stderr)
+        print(f'{line:0{line_num_size}d} |', end='', file=stderr)
+        print(text_part, file=stderr)
+        print(' ' * (len(start_pos_num) - 1) + '|', end='', file=stderr)
+        print_underline(0, arrows_size, message_color, False, file=stderr)
+    print(Colors.RESET.value, end='', file=stderr)
 
 
 def token_error(token: AnyToken,
