@@ -68,6 +68,7 @@ def print_underline(indent: int, size: int,
     print(color.value, end='', file=file)
     print(DEFAULT_IDENT * indent + underline, file=file)
     print(Colors.RESET.value, end='', file=file)
+    print(Colors.RESET.value, end='')
 
 
 def error_message(start_pos: Pos, end_pos: Pos,
@@ -107,6 +108,7 @@ def error_message(start_pos: Pos, end_pos: Pos,
         print(' ' * (len(start_pos_num) - 1) + '|', end='', file=stderr)
         print_underline(0, arrows_size, message_color, False, file=stderr)
     print(Colors.RESET.value, end='', file=stderr)
+    print(Colors.RESET.value, end='')
 
 
 def token_error(token: AnyToken,

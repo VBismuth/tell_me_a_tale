@@ -224,6 +224,8 @@ class Program:
 
 
 Expression = Union[
+    Variable,
+    Constant,
     Literal,
     ListLiteral,
     Identifier,
