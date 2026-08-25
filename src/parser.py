@@ -18,7 +18,10 @@
 """ Parser and symantic analazer for TMT """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Union, get_args as type_get_args
+from typing import (
+    List, Dict, Union,
+    get_args as type_get_args,
+    cast as type_cast)
 from enum import Enum, auto as iota
 from sys import exit as sysexit
 
@@ -26,7 +29,7 @@ from .ast_ import (
     Identifier, Constant, Variable,
     DataType, Literal, Pass,
     FunctionDefinition, FunctionCall,
-    Program, Node,
+    Program, Node, Expression
 )
 from .tokens import Token, TokenType
 from .errors import error_print, warn_print, token_error
@@ -47,16 +50,18 @@ TMT_DEFAULT_CONSTS: Dict[Identifier, Constant] = {
 TMT_DEFAULT_VARS: Dict[Identifier, Variable] = {
     Identifier("SELF"):    Variable(Identifier("SELF"),
                                     DataType("text"),
-                                    TMT_SELF.replace(
-                                        bytes.fromhex(SELF_ID_HEX)\
-                                             .decode('utf8'),
-                                        TMT_SELF.replace("\\", r"\\")\
-                                                .replace("'", "\\'"))
+                                    "_BUILTIN_SELF"
+                                    # TMT_SELF.replace(
+                                    #     bytes.fromhex(SELF_ID_HEX)\
+                                    #          .decode('utf8'),
+                                    #     TMT_SELF.replace("\\", r"\\")\
+                                    #             .replace("'", "\\'"))
                                     ),
     Identifier("ERROR"):   Variable(Identifier("ERROR"),
                                     DataType("number", 'u8'),
                                     '0'),
 }
+NOTHING: Literal = Literal('nothing', DataType())
 
 
 @dataclass
@@ -74,10 +79,10 @@ class TmtObjectsTrack:
     def add(self, obj: TmtObject) -> bool:
         """ Add new object """
         if not isinstance(obj, type_get_args(TmtObject)):
-            error_print("ERROR: parser: Could not add object of type",
+            error_print("ERROR: TmtObjectsTrack: Could not add object of type",
                         str(type(obj)),
                         "to track. Expected:", str(type_get_args(TmtObject)))
-            sysexit(1)
+            return False
         if self.check_exists(obj.name):
             return False  # Return false if exists
         self.names.append(obj.name)
@@ -143,7 +148,7 @@ class ParserContext:
             return None
         return self.tokens[self.pointer]
 
-    def next(self, n: int = 1) -> Token | None:
+    def next_token(self, n: int = 1) -> Token | None:
         """ Move pointer and return previous n token
         if it exists, None otherwise """
         if self.pointer + n >= len(self.tokens):
@@ -155,7 +160,7 @@ class ParserContext:
         self.pointer += n
         return self.get_token()
 
-    def prev(self, n: int = 1) -> Token | None:
+    def prev_token(self, n: int = 1) -> Token | None:
         """ Move pointer and return previous n token
         if it exists, None otherwise """
         if len(self.tokens) < self.pointer - n < 0:
@@ -171,16 +176,32 @@ class ParserContext:
         """ Reset pointer position to zero """
         self.pointer = 0
 
-    def last(self) -> Token | None:
+    def last_token(self) -> Token | None:
         """ Move pointer and return last token if it exists, None otherwise """
         if self.tokens:
             self.pointer = len(self.tokens) - 1
             return self.get_token()
         return None
 
-    def end(self) -> None:
+    def eof(self) -> None:
         """ Move pointer to the end of token list to stop iteration """
         self.pointer = len(self.tokens)
+
+    @staticmethod
+    def setup(source: Text, tokens: List[Token]) -> ParserContext:
+        """ Setup default parser context """
+        ctx = ParserContext(source, tokens)
+        for defaults in (TMT_DEFAULT_CONSTS, TMT_DEFAULT_VARS):
+            for name, obj in defaults.items():
+                if ctx.objects.check_exists(name):
+                    warn_print(f'WARN: ParserContext.setup: name "{name}" is '
+                               'already defined')
+                    continue
+                if not ctx.objects.add(obj):
+                    warn_print('WARN: ParserContext.setup: couldn\'t add '
+                               f'"{name}" to track')
+                    continue
+        return ctx
 
 
 def concatinate_words(ctx: ParserContext) -> Token:
@@ -191,22 +212,22 @@ def concatinate_words(ctx: ParserContext) -> Token:
                 f"expected word.\nContext: {ctx}")
     res: Token = tok.copy()
     res.type_ = TokenType.STRING
-    tok = ctx.next()
+    tok = ctx.next_token()
     comments: List[Token] = []
     while tok and tok.type_ not in\
             (TokenType.COMMA, TokenType.TERMINATOR,
              TokenType.COLON, ):
         if tok.type_ is TokenType.COMMENT:
             comments.append(tok)
-            tok = ctx.next()
+            tok = ctx.next_token()
             continue
         res.end_pos.update(tok.end_pos)
         res.body = ctx.source.get_slice(res.start_pos, res.end_pos)
-        tok = ctx.next()
+        tok = ctx.next_token()
     # Clean comments out of the string
     for comm in comments:
         res.body = res.body.replace(comm.body, '')
-    print(res.body)
+    # print(res.body)
     return res
 
 
@@ -215,10 +236,42 @@ def process_expression(ctx: ParserContext) -> None:
     raise NotImplementedError
 
 
-def process_args(ctx: ParserContext) -> Node:
+def fn_the_meaning_of(ctx: ParserContext) -> Expression:
+    """ Process 'the meaning of' statement """
+    tok: Token | None = ctx.next_token()
+    if tok is None:
+        error_print('ERROR: fn_the_meaning_of: got None')
+        ctx.perror = ParseError.TOKENERR
+        ctx.eof()
+        return NOTHING
+    if tok.type_ != TokenType.IDENTIFIER:
+        token_error(tok, ctx.source, '`The meaning of` expected argument'
+                    f' of type `IDENTIFIER` but got `{tok.type_.name}`')
+        ctx.perror = ParseError.SYNTAXERR
+        return NOTHING
+    if not ctx.objects.check_exists(tok.body):
+        # TODO: maybe add "Did you mean <...>?"
+        token_error(tok, ctx.source, f'Name "{tok.body}" is not defined')
+        ctx.perror = ParseError.SYNTAXERR
+        return NOTHING
+    return type_cast(Expression, ctx.objects.get(tok.body) or NOTHING)
+
+
+def process_args(ctx: ParserContext) -> List[Expression]:
     """ Process secondary keywords, literals or expressions as
         the arguments for the operators """
-    raise NotImplementedError
+    res: List[Expression] = []
+    tok: Token | None = ctx.get_token()
+    assert tok is not None, "ERROR: process_args: expected token, got None"
+    if tok.body.lower() == 'the meaning of':
+        res.append(fn_the_meaning_of(ctx))
+    else:
+        token_error(tok, ctx.source,
+                    f'Unexpected keyword, literal or expression: {str(tok)}')
+        ctx.perror = ParseError.SYNTAXERR
+        ctx.eof()
+        return res
+    return res
 
 
 def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
@@ -234,13 +287,13 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
     elif output == 'stderr':
         res.args.append(Identifier('STDERR'))
     elif output == 'ident':
-        tok = ctx.next()
+        tok = ctx.next_token()
         if not tok:
             token_error(fn_root, ctx.source,
                         f"ERROR: `{fn_root.body}` "
                         "expected identifier argument but got nothing")
             ctx.perror = ParseError.SYNTAXERR
-            ctx.end()
+            ctx.eof()
             return Pass()
         if tok.type_ != TokenType.IDENTIFIER:
             token_error(tok, ctx.source,
@@ -248,18 +301,18 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
                         "expected [IDENTIFIER] argument but got "
                         f"[{tok.type_.name}]")
             ctx.perror = ParseError.SYNTAXERR
-            ctx.end()
+            ctx.eof()
             return Pass()
         res.args.append(Identifier(tok.body))
         res.position = (res.position[0], tok.end_pos)
     elif output == 'path':
-        tok = ctx.next()
+        tok = ctx.next_token()
         if not tok:
             token_error(fn_root, ctx.source,
                         f"ERROR: `{fn_root.body}` "
                         "expected path argument but got nothing")
             ctx.perror = ParseError.SYNTAXERR
-            ctx.end()
+            ctx.eof()
             return Pass()
         if tok.type_ == TokenType.WORD:
             tok = concatinate_words(ctx)
@@ -269,7 +322,7 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
                         "expected [STRING] argument but got "
                         f"[{tok.type_.name}]")
             ctx.perror = ParseError.SYNTAXERR
-            ctx.end()
+            ctx.eof()
             return Pass()
         res.args.append(Literal(value=tok.body, valtype=DataType('text')))
         res.position = (res.position[0], tok.end_pos)
@@ -278,18 +331,15 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
                     f'parameter `{output}`, expected `stdout`, '
                     '`stderr`, `ident` or `path`')
         ctx.perror = ParseError.PARAMETERERR
-        ctx.end()
+        ctx.eof()
         return Pass()
-    tok = ctx.next()
+    tok = ctx.next_token()
     while tok and tok.type_ not in (TokenType.TERMINATOR,):
         if not tok:
             break
-        token_error(tok, ctx.source,
-                    f"Unexpected `{fn_root.body}` argument "
-                    f"'{str(tok)}'")
-        ctx.perror = ParseError.SYNTAXERR
-        # res.args += process_args(ctx)  # TODO: implement
-        tok = ctx.next()
+        res.args += process_args(ctx)  # TODO: complete
+        res.position = (res.position[0], (ctx.get_token() or tok).end_pos)
+        tok = ctx.next_token()
     return res
 
 
@@ -301,21 +351,22 @@ def process_statements(ctx: ParserContext) -> Node:
         error_print("ERROR: parser: process_keyword "
                     "got None.\nContext:", str(ctx))
         ctx.perror = ParseError.TOKENERR
+        ctx.eof()
         return res
         # sysexit(1)
-    if tok.body == "Say":
+    if tok.body.lower() == "say":
         res = fn_tell_print(ctx, 'stdout')
         if not isinstance(res, FunctionCall):
             return res
         res.args.append(Literal('\n', DataType('text')))
 
-    elif tok.body == "Tell me":
+    elif tok.body.lower() == "tell me":
         res = fn_tell_print(ctx, 'stdout')
-    elif tok.body == "Tell error":
+    elif tok.body.lower() == "tell error":
         res = fn_tell_print(ctx, 'stderr')
-    elif tok.body == "Tell":
-        tok = ctx.next()
-        ctx.prev()
+    elif tok.body.lower() == "tell":
+        tok = ctx.next_token()
+        ctx.prev_token()
         if tok and tok.type_ == TokenType.IDENTIFIER:
             res = fn_tell_print(ctx, 'ident')
         else:
@@ -325,8 +376,8 @@ def process_statements(ctx: ParserContext) -> Node:
                     f"Unexpected keyword '{tok.body}'")
         # sysexit(1)
         ctx.perror = ParseError.SYNTAXERR
-        ctx.end()
-    tok = ctx.last() if not ctx.get_token() else ctx.get_token()
+        ctx.eof()
+    tok = ctx.last_token() if not ctx.get_token() else ctx.get_token()
     assert tok is not None, \
         "Expected token to exists, but got none."\
         f"Context: {ctx}"
@@ -350,15 +401,15 @@ def parse(ctx: ParserContext) -> Program:
     while tok:
         if tok.type_ == TokenType.WORD:
             concatinate_words(ctx)  # discard words
-            tok = ctx.next()
+            tok = ctx.next_token()
             continue
         if tok.type_ != TokenType.KEYWORD:
-            tok = ctx.next()
+            tok = ctx.next_token()
             continue
         processed: Node = process_statements(ctx)
         if isinstance(processed, type_get_args(Node)):
             res.body.append(processed)
-        tok = ctx.next()
+        tok = ctx.next_token()
     if not res.body:
         res.body = [Pass()]
     return res

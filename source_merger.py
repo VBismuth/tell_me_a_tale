@@ -55,7 +55,7 @@ INCLUDES: Dict[str, List[str]] = {
         ['Generator', 'Callable', 'Union',
          'Optional', 'Type', 'Any',
          'Tuple', 'List', 'Dict',
-         'TextIO',
+         'TextIO', 'cast as type_cast',
          'get_args as type_get_args']),
     'dataclasses': ['dataclass', 'field'],
     'enum': ['Enum', 'auto as iota'],
