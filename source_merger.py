@@ -10,7 +10,7 @@ def _format(text: str) -> str:
 
 
 def beautify_imports(to_include: List[str], treshold: int = 40) -> List[str]:
-    """ Make large imports more clean by spliting large chunks """
+    """ Make large imports more clean by splitting large chunks """
     if not to_include:
         return [INCLUDE_AS_MODULE]
     ident: str = ' ' * 4
@@ -40,6 +40,7 @@ TARGET: str = 'storyteller'
 SOURCE_DIR: Path = Path('src')
 SOURCE_SCHEME: List[str] = [
     '__init__',
+    'utils',
     'text',
     'errors',
     'tokens',
@@ -50,6 +51,7 @@ SOURCE_SCHEME: List[str] = [
 ]
 INCLUDES: Dict[str, List[str]] = {
     're': [INCLUDE_AS_MODULE],
+    'difflib': ['get_close_matches'],
     'sys': ['stderr', 'exit as sysexit'],
     'typing': beautify_imports(
         ['Generator', 'Callable', 'Union',

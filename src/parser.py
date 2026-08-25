@@ -34,34 +34,51 @@ from .ast_ import (
 from .tokens import Token, TokenType
 from .errors import error_print, warn_print, token_error
 from .text import Text
-from . import TMT_SELF, TMT_VERSION
+from . import TMT_VERSION
+from .utils import suggest_name
 
 
 # !!START!!
 # TODO: for import purposes should form dependency tree for the IMPORT
 TmtObject = Union[Constant, Variable, FunctionDefinition]
-SELF_ID_HEX: str = '212153454c462121'
 
-TMT_DEFAULT_CONSTS: Dict[Identifier, Constant] = {
-    Identifier("VERSION"): Constant(Identifier("VERSION"),
-                                    DataType("text"),
-                                    TMT_VERSION),
+TMT_DEFAULT_CONSTS: Dict[str, Constant] = {
+    "VERSION":          Constant(Identifier("VERSION"),
+                                 DataType("text"),
+                                 TMT_VERSION),
+    "UNKNOWN ERROR":    Constant(Identifier("UNKNOWN ERROR"),
+                                 DataType('number', 'u8'),
+                                 '255'),
+    "NO ERROR":         Constant(Identifier("NO ERROR"),
+                                 DataType('number', 'u8'),
+                                 '0'),
+    "RUNTIME ERROR":    Constant(Identifier("RUNTIME ERROR"),
+                                 DataType('number', 'u8'),
+                                 '1'),
+    "MATH ERROR":       Constant(Identifier("MATH ERROR"),
+                                 DataType('number', 'u8'),
+                                 '2'),
+    "FILE READ ERROR":  Constant(Identifier("FILE READ ERROR"),
+                                 DataType('number', 'u8'),
+                                 '3'),
+    "FILE WRITE ERROR": Constant(Identifier("FILE WRITE ERROR"),
+                                 DataType('number', 'u8'),
+                                 '4'),
+    "MEMORY ERROR":     Constant(Identifier("MEMORY ERROR"),
+                                 DataType('number', 'u8'),
+                                 '5'),
 }
-TMT_DEFAULT_VARS: Dict[Identifier, Variable] = {
-    Identifier("SELF"):    Variable(Identifier("SELF"),
-                                    DataType("text"),
-                                    "_BUILTIN_SELF"
-                                    # TMT_SELF.replace(
-                                    #     bytes.fromhex(SELF_ID_HEX)\
-                                    #          .decode('utf8'),
-                                    #     TMT_SELF.replace("\\", r"\\")\
-                                    #             .replace("'", "\\'"))
-                                    ),
-    Identifier("ERROR"):   Variable(Identifier("ERROR"),
-                                    DataType("number", 'u8'),
-                                    '0'),
+TMT_DEFAULT_VARS: Dict[str, Variable] = {
+    "SELF":            Variable(Identifier("SELF"),
+                                DataType("text"),
+                                "_BUILTIN_SELF"
+                                ),
+    "ERROR":           Variable(Identifier("ERROR"),
+                                DataType("number", 'u8'),
+                                '0'),
 }
 NOTHING: Literal = Literal('nothing', DataType())
+NEWLINE: Literal = Literal('\n', DataType('text'))
 
 
 @dataclass
@@ -100,11 +117,13 @@ class TmtObjectsTrack:
         """ Checks if name exists and pops it out. Otherwise returns None"""
         name = Identifier(name) if isinstance(name, str) else name
         if self.check_exists(name):
-            return self.consts.pop(name) if name in self.consts else (
+            res = self.consts.pop(name) if name in self.consts else (
                 self.variables.pop(name) if name in self.variables
                 else (self.functions.pop(name) if name in self.functions
                       else None)
-            )
+            )  # pop object
+            self.names.pop(self.names.index(name))  # remove name
+            return res
         return None
 
     def get(self, name: Identifier | str) -> TmtObject | None:
@@ -125,7 +144,7 @@ class TmtObjectsTrack:
 
 
 class ParseError(Enum):
-    """ Parser Modes to decide what to do """
+    """ Parser Errors """
     OK           = 0
     TOKENERR     = iota()
     SYNTAXERR    = iota()
@@ -227,7 +246,6 @@ def concatinate_words(ctx: ParserContext) -> Token:
     # Clean comments out of the string
     for comm in comments:
         res.body = res.body.replace(comm.body, '')
-    # print(res.body)
     return res
 
 
@@ -250,8 +268,12 @@ def fn_the_meaning_of(ctx: ParserContext) -> Expression:
         ctx.perror = ParseError.SYNTAXERR
         return NOTHING
     if not ctx.objects.check_exists(tok.body):
-        # TODO: maybe add "Did you mean <...>?"
-        token_error(tok, ctx.source, f'Name "{tok.body}" is not defined')
+        suggestion: str | None = suggest_name(
+            tok.body,
+            [str(i.name) for i in ctx.objects.names]
+        )
+        token_error(tok, ctx.source, f'Name "{tok.body}" is not defined' +
+                    (f'. Did you mean "{suggestion}"?' if suggestion else ''))
         ctx.perror = ParseError.SYNTAXERR
         return NOTHING
     return type_cast(Expression, ctx.objects.get(tok.body) or NOTHING)
@@ -358,7 +380,7 @@ def process_statements(ctx: ParserContext) -> Node:
         res = fn_tell_print(ctx, 'stdout')
         if not isinstance(res, FunctionCall):
             return res
-        res.args.append(Literal('\n', DataType('text')))
+        res.args.append(NEWLINE)
 
     elif tok.body.lower() == "tell me":
         res = fn_tell_print(ctx, 'stdout')
