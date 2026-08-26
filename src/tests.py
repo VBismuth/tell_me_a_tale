@@ -153,8 +153,14 @@ class TestExpTokenize(TestCase):
             self.assertIsInstance(token.type_, ExpTokenType,
                                   f"Token {str(token)} type is "
                                   f"incorrect")
+
+
+def run_tests(*args: Any, **kwargs: Any) -> None:
+    """ Test TMT """
+    # TODO: custom tester to beautify output
+    unittestmain(*args, **kwargs)
 # !!STOP!!
 
 
 if __name__ == '__main__':
-    unittestmain(verbosity=2)
+    run_tests(verbosity=2)
