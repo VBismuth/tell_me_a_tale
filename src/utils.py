@@ -19,8 +19,11 @@
 
 from difflib import get_close_matches
 from typing import List
+from pathlib import Path
+from sys import exit as sysexit
 
 from . import TMT_SELF
+from .errors import error_print
 
 
 # !!START!!
@@ -41,3 +44,19 @@ def tmt_get_self() -> str:
              .decode('utf8'),
         TMT_SELF.replace("\\", r"\\")\
                 .replace("'", "\\'"))
+
+
+def check_tmt_file(app_name: str, filename: str) -> Path:
+    """ Check if filename is a valid tmt file and returns Path object """
+    file = Path(filename).resolve()
+    if not file.exists():
+        error_print(f'ERROR: {app_name}: File {filename!r} not found')
+        sysexit(-1)
+    if not file.is_file():
+        error_print(f'ERROR: {app_name}: {filename!r} is not a file')
+        sysexit(-1)
+    if file.suffix not in ('.tmt',):
+        error_print(f'ERROR: {app_name}: expected <file>.tmt,',
+                    f'got {filename!r}')
+        sysexit(-1)
+    return file

@@ -48,11 +48,15 @@ SOURCE_SCHEME: List[str] = [
     'ast_',
     'parser',
     'tests',
+    'main'
 ]
 INCLUDES: Dict[str, List[str]] = {
     're': [INCLUDE_AS_MODULE],
+    'json': [INCLUDE_AS_MODULE],
+    'pathlib': ['Path'],
     'difflib': ['get_close_matches'],
-    'sys': ['stderr', 'exit as sysexit'],
+    'sys': ['stderr', 'exit as sysexit',
+            'argv as sysargs'],
     'typing': beautify_imports(
         ['Generator', 'Callable', 'Union',
          'Optional', 'Type', 'Any',
@@ -83,7 +87,7 @@ HEADER_TEXT: str = '''# -*- coding: utf8 -*-
 """ This is full source of the Storyteller - a TMT interpreter """
 '''
 FOOTER_TEXT: str = '''if __name__ == "__main__":
-    unittestmain(verbosity=2)
+    main(sysargs)
 '''
 
 
