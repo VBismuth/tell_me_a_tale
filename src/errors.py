@@ -120,7 +120,10 @@ def token_error(token: AnyToken,
 
 def error_print(*args: Any, **kwargs: Any) -> None:
     """ Print error message to stderr """
-    args = (Colors.FG_RED.value,) + args
+    if not args:
+        print()
+        return
+    args = (Colors.FG_RED.value + str(args[0]),) + args[1:]
     args = args + (Colors.RESET.value,)
     kwargs['file'] = stderr
     print(*args, **kwargs)
@@ -128,7 +131,10 @@ def error_print(*args: Any, **kwargs: Any) -> None:
 
 def warn_print(*args: Any, **kwargs: Any) -> None:
     """ Print warning message to stderr """
-    args = (Colors.FG_YELLOW.value,) + args
+    if not args:
+        print()
+        return
+    args = (Colors.FG_YELLOW.value + str(args[0]),) + args[1:]
     args = args + (Colors.RESET.value,)
     kwargs['file'] = stderr
     print(*args, **kwargs)
