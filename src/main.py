@@ -18,7 +18,8 @@
 """ Main function for TMT interpreter """
 
 from sys import argv as sysargs, exit as sysexit
-from typing import List
+from typing import List, Dict
+from textwrap import fill as tw_fill
 from pathlib import Path
 import json
 
@@ -33,28 +34,40 @@ from .utils import check_tmt_file
 
 
 # !!START!!
+APP_OPTIONS: Dict[str, List[str]] = {
+    # option: ['args', 'description']
+    'help':        ['', 'Shows this message'],
+    'info':        ['', 'Shows info about TMT'],
+    'read':        ['<file>', 'Runs a script from provided file'],
+    'tell':        ['<str>', 'Runs a script from provided string'],
+    'tests':       ['[name[, ...]]', 'Runs self tests by name or names '
+                    '(optional) or just runs all tests'],
+    'translate':   ['<file>', 'Translates file to AST and dumps it '
+                    'in JSON format into the current directory '
+                    'as "<file>.ast.json"'],
+    'interactive': ['<str>', 'Runs interpreter in an interactive '
+                    'mode (like repl)'],
+}
+
+
 def app_help(app_name: str) -> None:
     """ Standard help message """
+    initial_indent: int = 4
+    name_indent: int = max(len(f'{key} {val[0]}')
+                           for key, val in APP_OPTIONS.items())
+    colon: str = ' : '
+    subsequent_indent: int = initial_indent + name_indent + len(colon)
+
     print(f'Usage: {app_name} [options] [file|string]\n')
     print('Options:')
-    print(DEFAULT_IDENT * 4, 'help             ',
-          ": Shows this message", sep='')
-    print(DEFAULT_IDENT * 4, 'info             ',
-          ": Shows info about TMT", sep='')
-    print(DEFAULT_IDENT * 4, 'read <file>      ',
-          ": Runs a script from provided file", sep='')
-    print(DEFAULT_IDENT * 4, 'tell <str>       ',
-          ": Runs a script from provided string", sep='')
-    print(DEFAULT_IDENT * 4, 'test [name, ...] ',
-          ": Runs self tests by name (optional) or ",
-          "all tests", sep='')
-    print(DEFAULT_IDENT * 4, 'translate <file> ',
-          ": Translates file to AST in json format\n",
-          DEFAULT_IDENT * (len('translate <file> ') + 4),
-          "  and dumps it into the current directory",
-          sep='')
-    print(DEFAULT_IDENT * 4, 'interactive      ',
-          ": Runs interpreter in an interactive mode (repl)", sep='')
+    for name, arg_n_desc in APP_OPTIONS.items():
+        option: str = f'{name} {arg_n_desc[0]}' if arg_n_desc[0] else str(name)
+        line = f'{option.ljust(name_indent)}{colon}{arg_n_desc[1]}'
+        print(tw_fill(
+            line,
+            initial_indent=DEFAULT_IDENT * initial_indent,
+            subsequent_indent=DEFAULT_IDENT * subsequent_indent
+        ))
 
 
 def app_info(app_name: str) -> None:
@@ -96,10 +109,6 @@ def main(argv: List[str]) -> None:
     """ Main function """
     argn: int = len(argv)
     app_name: str = argv[0]
-    options: List[str] = [
-        'help', 'info', 'read', 'test', 'tell',
-        'translate', 'interactive'
-    ]
     # TODO: add documentation option
     if any((pattern in argv)
            for pattern in ('--help', 'help', '-h')):
@@ -110,7 +119,7 @@ def main(argv: List[str]) -> None:
         app_help(app_name)
         sysexit(1)
 
-    if argv[1] not in options:
+    if argv[1] not in APP_OPTIONS:
         error_print(f'ERROR: unknown option {argv[1]!r}')
         app_help(app_name)
         sysexit(-1)
