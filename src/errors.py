@@ -25,7 +25,7 @@ from .text import Text, Pos
 from .tokens import AnyToken
 
 # !!START!!
-DEFAULT_IDENT = ' '
+DEFAULT_INDENT = ' '
 
 
 class Colors(Enum):
@@ -66,7 +66,7 @@ def print_underline(indent: int, size: int,
         color = Colors.RESET
     underline: str = '^' + '~' * (size - 1) if prepend_arrow else '~' * size
     print(color.value, end='', file=file)
-    print(DEFAULT_IDENT * indent + underline, file=file)
+    print(DEFAULT_INDENT * indent + underline, file=file)
     print(Colors.RESET.value, end='', file=file)
     print(Colors.RESET.value, end='')
 

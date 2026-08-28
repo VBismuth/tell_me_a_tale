@@ -25,7 +25,7 @@ import json
 
 from . import TMT_VERSION, TMT_LICENSE, TMT_AUTHOR
 from .ast_ import ast_to_dict
-from .errors import DEFAULT_IDENT, warn_print, error_print
+from .errors import DEFAULT_INDENT, warn_print, error_print
 from .tests import run_tests
 from .text import Text
 from .lexer import tokenize
@@ -65,8 +65,8 @@ def app_help(app_name: str) -> None:
         line = f'{option.ljust(name_indent)}{colon}{arg_n_desc[1]}'
         print(tw_fill(
             line,
-            initial_indent=DEFAULT_IDENT * initial_indent,
-            subsequent_indent=DEFAULT_IDENT * subsequent_indent
+            initial_indent=DEFAULT_INDENT * initial_indent,
+            subsequent_indent=DEFAULT_INDENT * subsequent_indent
         ))
 
 
