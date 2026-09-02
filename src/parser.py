@@ -32,7 +32,7 @@ from .ast_ import (
     Program, Node, Expression
 )
 from .tokens import Token, TokenType
-from .errors import error_print, warn_print, token_error
+from .errors import error_print, warn_print, token_error, ParseError
 from .text import Text
 from . import TMT_VERSION
 from .utils import suggest_name
@@ -142,13 +142,6 @@ class TmtObjectsTrack:
         res = Identifier(name) if isinstance(name, str) else name
         return isinstance(res, Identifier) and res in self.names
 
-
-class ParseError(Enum):
-    """ Parser Errors """
-    OK           = 0
-    TOKENERR     = iota()
-    SYNTAXERR    = iota()
-    PARAMETERERR = iota()
 
 
 @dataclass

@@ -17,7 +17,7 @@
 
 """ Printing error messages """
 
-from enum import Enum
+from enum import Enum, auto as iota
 from typing import Any, Optional, TextIO
 from sys import stderr
 
@@ -52,6 +52,22 @@ class Colors(Enum):
 
     # Set to default
     RESET      = "\033[0m"   # ]
+
+
+class ParseError(Enum):
+    """ Parser Errors """
+    OK           = 0
+    TOKENERR     = iota()
+    SYNTAXERR    = iota()
+    PARAMETERERR = iota()
+
+
+class TMTRuntimeError(Enum):
+    """ Runtime Errors """
+    OK               = 0
+    IOERR            = iota()
+    FILEEXISTSERR    = iota()
+    FILENOTFOUNDERR  = iota()
 
 
 def print_underline(indent: int, size: int,
