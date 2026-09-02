@@ -34,53 +34,14 @@ from .ast_ import (
 from .tokens import Token, TokenType
 from .errors import error_print, warn_print, token_error, ParseError
 from .text import Text
-from . import TMT_VERSION
 from .utils import suggest_name
+from .builtins import (
+    TmtObject, TMT_BUILTIN_CONSTS, TMT_BUILTIN_VARS, NOTHING, NEWLINE
+)
 
 
 # !!START!!
 # TODO: for import purposes should form dependency tree for the IMPORT
-TmtObject = Union[Constant, Variable, FunctionDefinition]
-
-TMT_DEFAULT_CONSTS: Dict[str, Constant] = {
-    "VERSION":          Constant(Identifier("VERSION"),
-                                 DataType("text"),
-                                 TMT_VERSION),
-    "UNKNOWN ERROR":    Constant(Identifier("UNKNOWN ERROR"),
-                                 DataType('number', 'u8'),
-                                 '255'),
-    "NO ERROR":         Constant(Identifier("NO ERROR"),
-                                 DataType('number', 'u8'),
-                                 '0'),
-    "RUNTIME ERROR":    Constant(Identifier("RUNTIME ERROR"),
-                                 DataType('number', 'u8'),
-                                 '1'),
-    "MATH ERROR":       Constant(Identifier("MATH ERROR"),
-                                 DataType('number', 'u8'),
-                                 '2'),
-    "FILE READ ERROR":  Constant(Identifier("FILE READ ERROR"),
-                                 DataType('number', 'u8'),
-                                 '3'),
-    "FILE WRITE ERROR": Constant(Identifier("FILE WRITE ERROR"),
-                                 DataType('number', 'u8'),
-                                 '4'),
-    "MEMORY ERROR":     Constant(Identifier("MEMORY ERROR"),
-                                 DataType('number', 'u8'),
-                                 '5'),
-}
-TMT_DEFAULT_VARS: Dict[str, Variable] = {
-    "SELF":            Variable(Identifier("SELF"),
-                                DataType("text"),
-                                "_BUILTIN_SELF"
-                                ),
-    "ERROR":           Variable(Identifier("ERROR"),
-                                DataType("number", 'u8'),
-                                '0'),
-}
-NOTHING: Literal = Literal('nothing', DataType())
-NEWLINE: Literal = Literal('\n', DataType('text'))
-
-
 @dataclass
 class TmtObjectsTrack:
     """ Tracks used TMT Objects """
@@ -142,6 +103,18 @@ class TmtObjectsTrack:
         res = Identifier(name) if isinstance(name, str) else name
         return isinstance(res, Identifier) and res in self.names
 
+    def setup_builtins(self) -> None:
+        """ Setup builtins to track """
+        for defaults in (TMT_BUILTIN_CONSTS, TMT_BUILTIN_VARS):
+            for name, obj in defaults.items():
+                if self.check_exists(name):
+                    warn_print(f'WARN: TmtObjectsTrack.setup: name "{name}" is'
+                               ' already defined')
+                    continue
+                if not self.add(obj):
+                    warn_print('WARN: TmtObjectsTrack.setup: couldn\'t add '
+                               f'"{name}" to track')
+                    continue
 
 
 @dataclass
@@ -203,16 +176,7 @@ class ParserContext:
     def setup(source: Text, tokens: List[Token]) -> ParserContext:
         """ Setup default parser context """
         ctx = ParserContext(source, tokens)
-        for defaults in (TMT_DEFAULT_CONSTS, TMT_DEFAULT_VARS):
-            for name, obj in defaults.items():
-                if ctx.objects.check_exists(name):
-                    warn_print(f'WARN: ParserContext.setup: name "{name}" is '
-                               'already defined')
-                    continue
-                if not ctx.objects.add(obj):
-                    warn_print('WARN: ParserContext.setup: couldn\'t add '
-                               f'"{name}" to track')
-                    continue
+        ctx.objects.setup_builtins()
         return ctx
 
 

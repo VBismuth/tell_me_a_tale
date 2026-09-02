@@ -46,6 +46,7 @@ SOURCE_SCHEME: List[str] = [
     'tokens',
     'lexer',
     'ast_',
+    'builtins',
     'parser',
     'tests',
     'main'
@@ -62,7 +63,8 @@ INCLUDES: Dict[str, List[str]] = {
         ['Generator', 'Callable', 'Union',
          'Optional', 'Type', 'Any',
          'Tuple', 'List', 'Dict',
-         'TextIO', 'cast as type_cast',
+         'TextIO', 'Callable',
+         'cast as type_cast',
          'get_args as type_get_args']),
     'dataclasses': ['dataclass', 'field'],
     'enum': ['Enum', 'auto as iota'],
