@@ -17,7 +17,7 @@
 
 """ TMT Builtins """
 
-from typing import Dict, Union, Callable
+from typing import Dict, Union, Callable, Any
 from sys import stdout, stderr
 
 from . import TMT_VERSION
@@ -71,7 +71,7 @@ NOTHING: Literal = Literal('nothing', DataType())
 NEWLINE: Literal = Literal('\n', DataType('text'))
 
 
-def builtin_print(*args, file="STDOUT") -> TMTRuntimeError:
+def builtin_print(*args: Any, file: str = "STDOUT") -> TMTRuntimeError:
     """ Python print wrapper for TMT builtin PRINT """
     if file == "STDOUT":
         print(*args, file=stdout, end='', sep='')
@@ -85,6 +85,6 @@ def builtin_print(*args, file="STDOUT") -> TMTRuntimeError:
     return TMTRuntimeError.OK
 
 
-TMT_BUILTIN_FUNCS: Dict[str, Callable] = {
+TMT_BUILTIN_FUNCS: Dict[str, Callable[..., TMTRuntimeError]] = {
     "PRINT": builtin_print,
 }

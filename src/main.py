@@ -25,11 +25,11 @@ import json
 
 from . import TMT_VERSION, TMT_LICENSE, TMT_AUTHOR
 from .ast_ import ast_to_dict
-from .errors import DEFAULT_INDENT, warn_print, error_print
+from .errors import DEFAULT_INDENT, warn_print, error_print, ParseError
 from .tests import run_tests
 from .text import Text
 from .lexer import tokenize
-from .parser import ParserContext, ParseError, parse
+from .parser import ParserContext, parse
 from .utils import check_tmt_file
 
 
@@ -40,7 +40,7 @@ APP_OPTIONS: Dict[str, List[str]] = {
     'info':        ['', 'Shows info about TMT'],
     'read':        ['<file>', 'Runs a script from provided file'],
     'tell':        ['<str>', 'Runs a script from provided string'],
-    'tests':       ['[name[, ...]]', 'Runs self tests by name or names '
+    'test':        ['[name[, ...]]', 'Runs self tests by name or names '
                     '(optional) or just runs all tests'],
     'translate':   ['<file>', 'Translates file to AST and dumps it '
                     'in JSON format into the current directory '

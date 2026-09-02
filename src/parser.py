@@ -19,10 +19,8 @@
 
 from dataclasses import dataclass, field
 from typing import (
-    List, Dict, Union,
-    get_args as type_get_args,
+    List, Dict, get_args as type_get_args,
     cast as type_cast)
-from enum import Enum, auto as iota
 from sys import exit as sysexit
 
 from .ast_ import (
