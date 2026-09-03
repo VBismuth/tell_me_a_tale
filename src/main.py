@@ -24,13 +24,18 @@ from pathlib import Path
 import json
 
 from . import TMT_VERSION, TMT_LICENSE, TMT_AUTHOR
-from .ast_ import ast_to_dict
-from .errors import DEFAULT_INDENT, warn_print, error_print, ParseError
+from .ast_ import ast_to_dict, ast_from_dict, Program
+from .errors import (
+    DEFAULT_INDENT, warn_print, error_print,
+    ParseError, TMTRuntimeError
+)
 from .tests import run_tests
 from .text import Text
+from .tokens import Token
 from .lexer import tokenize
 from .parser import ParserContext, parse
 from .utils import check_tmt_file
+from .interpreter import RuntimeContext, interp
 
 
 # !!START!!
@@ -48,6 +53,40 @@ APP_OPTIONS: Dict[str, List[str]] = {
     'interactive': ['<str>', 'Runs interpreter in an interactive '
                     'mode (like repl)'],
 }
+
+
+def stage_tokenize(app_name: str, source: Text) -> List[Token]:
+    """ Tokenizing stage """
+    try:
+        tokens = list(tokenize(source))
+    except AssertionError as err:
+        error_print(f'ERROR: {app_name}:', err)
+        error_print(f'{app_name.capitalize()}:',
+                    'got an error at tokenizing stage.',
+                    'See message above')
+        sysexit(-1)
+    return tokens
+
+
+def stage_parse(app_name: str, ctx: ParserContext) -> Program:
+    """ Parsing stage """
+    res = parse(ctx)
+    if ctx.perror != ParseError.OK:
+        error_print(app_name.capitalize(),
+                    f'got {ctx.perror.name!r} at parsing stage.',
+                    'See messages above')
+        sysexit(ctx.perror.value)
+    return res
+
+
+def stage_interprete(app_name: str, ctx: RuntimeContext) -> None:
+    """ Interpreting stage """
+    interp(ctx)
+    if ctx.rerror != TMTRuntimeError.OK:
+        error_print(app_name.capitalize(),
+                    f'got {ctx.rerror.name!r} at interpreting stage.',
+                    'See messages above')
+        sysexit(ctx.rerror.value)
 
 
 def app_help(app_name: str) -> None:
@@ -82,27 +121,56 @@ def app_info(app_name: str) -> None:
 
 def app_translate(app_name: str, target: str) -> None:
     """ Translates target into AST JSON and dumps it """
-    file = check_tmt_file(app_name, target)
+    file = check_tmt_file(app_name, target).resolve()
     source = Text.new(file.read_text('utf8'), str(file))
-    try:
-        tokens = list(tokenize(source))
-    except AssertionError as err:
-        error_print(f'ERROR: {app_name}:', err)
-        error_print(f'{app_name.capitalize()}:',
-                    'got an error at tokenizing stage.',
-                    'See message above')
-        sysexit(-1)
+    tokens = stage_tokenize(app_name, source)
+
     ctx = ParserContext.setup(source, tokens)
-    res = parse(ctx)
-    if ctx.perror != ParseError.OK:
-        error_print(app_name.capitalize(),
-                    f'got {ctx.perror.name!r} at parsing stage.',
-                    'See messages above')
-        sysexit(ctx.perror.value)
+    res = stage_parse(app_name, ctx)
+
     dump_file = Path(file.name.replace('.tmt', '.ast') + '.json')
     with dump_file.open('w', encoding='utf8') as fp:
         json.dump(ast_to_dict(res), fp, ensure_ascii=False)
     print(f'Succesfuly translated {target!r} to {str(dump_file)!r}')
+
+
+def app_read(app_name: str, target: str) -> None:
+    """ Run script from file """
+    file = check_tmt_file(app_name, target)
+    if file.suffix == '.json':
+        prog = ast_from_dict(json.loads(file.read_text('utf8')))
+        assert isinstance(prog, Program), \
+            f"expected to get Program, got {type(prog)}"
+        source = Text.new(
+            check_tmt_file(app_name, prog.file).read_text('utf8'),
+            prog.file
+        )
+        runctx = RuntimeContext.setup(
+            source, prog
+        )
+        stage_interprete(app_name, runctx)
+        sysexit(runctx.ret_code)
+
+    source = Text.new(file.read_text('utf8'), str(file))
+    tokens = stage_tokenize(app_name, source)
+
+    ctx = ParserContext.setup(source, tokens)
+    prog = stage_parse(app_name, ctx)
+    runctx = RuntimeContext.setup(source, prog)
+    stage_interprete(app_name, runctx)
+    sysexit(runctx.ret_code)
+
+
+def app_tell(app_name: str, text: str) -> None:
+    """ Run script from string """
+    source = Text.new(text)
+    tokens = stage_tokenize(app_name, source)
+
+    ctx = ParserContext.setup(source, tokens)
+    prog = stage_parse(app_name, ctx)
+    runctx = RuntimeContext.setup(source, prog)
+    stage_interprete(app_name, runctx)
+    sysexit(runctx.ret_code)
 
 
 def main(argv: List[str]) -> None:
@@ -117,7 +185,7 @@ def main(argv: List[str]) -> None:
     if argn < 2:
         warn_print("WARN: expected an option")
         app_help(app_name)
-        sysexit(1)
+        sysexit(-2)
 
     if argv[1] not in APP_OPTIONS:
         error_print(f'ERROR: unknown option {argv[1]!r}')
@@ -143,9 +211,9 @@ def main(argv: List[str]) -> None:
     if argv[1] == 'translate':
         app_translate(app_name, argv[2])
     elif argv[1] == 'tell':
-        raise NotImplementedError
+        app_tell(app_name, ' '.join(argv[2:]))
     elif argv[1] == 'read':
-        raise NotImplementedError
+        app_read(app_name, argv[2])
 # !!STOP!!
 
 

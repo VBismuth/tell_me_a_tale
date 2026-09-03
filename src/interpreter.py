@@ -38,14 +38,15 @@ class RuntimeContext:
     source: Text
     program: Program
     objects: TmtObjectsTrack = field(default_factory=TmtObjectsTrack)
-    rerrors: TMTRuntimeError = TMTRuntimeError.OK
+    rerror: TMTRuntimeError = TMTRuntimeError.OK
     exiting: bool = False
     ret_code: int = 0
 
     @staticmethod
-    def new(*args: Any, **kwargs: Any) -> RuntimeContext:
+    def setup(source: Text, program: Program,
+              *args: Any, **kwargs: Any) -> RuntimeContext:
         """ Setup new instance of runtime context """
-        ctx: RuntimeContext = RuntimeContext(*args, **kwargs)
+        ctx: RuntimeContext = RuntimeContext(source, program, *args, **kwargs)
         ctx.objects.setup_builtins()
         return ctx
 
@@ -75,14 +76,14 @@ def interp_expression(ctx: RuntimeContext,
                 f'ERROR: interpreter: unknown name {target.name!r}' +
                 (f'. Did you mean {suggestion!r}?' if suggestion else '')
             )
-            ctx.rerrors = TMTRuntimeError.VALUEERR
+            ctx.rerror = TMTRuntimeError.VALUEERR
             return None
         return (get_tmt_value(obj.value, obj.datatype)
                 if isinstance(expr, GetVar) and
                 isinstance(obj, (Variable, Constant))
                 else identifier_info(target, ctx.objects))
     error_print(f'ERROR: interp_expression: unknown expression "{expr}"')
-    ctx.rerrors = TMTRuntimeError.VALUEERR
+    ctx.rerror = TMTRuntimeError.VALUEERR
     return None
 
 
@@ -100,6 +101,6 @@ def interp(ctx: RuntimeContext) -> TMTRuntimeError:
         else:
             error_print("ERROR: interpreter: unknown",
                         f"statement {str(statement)!r}")
-            ctx.rerrors = TMTRuntimeError.STATEMENTERR
+            ctx.rerror = TMTRuntimeError.STATEMENTERR
     print(end='', flush=True)  # so builtin_print wont stay unflushed
-    return ctx.rerrors
+    return ctx.rerror
