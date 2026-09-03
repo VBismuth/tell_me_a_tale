@@ -24,6 +24,8 @@ from sys import exit as sysexit
 
 from . import TMT_SELF
 from .errors import error_print
+from .ast_ import FunctionCall, FunctionDefinition, Identifier
+from .builtins_ import TmtObject, TmtObjectsTrack
 
 
 # !!START!!
@@ -46,17 +48,38 @@ def tmt_get_self() -> str:
                 .replace("'", "\\'"))
 
 
-def check_tmt_file(app_name: str, filename: str) -> Path:
+def check_tmt_file(app_name: str, filename: str,
+                   allow_ast: bool = True) -> Path:
     """ Check if filename is a valid tmt file and returns Path object """
     file = Path(filename).resolve()
+    suffixes = ('.tmt', '.ast.json') if allow_ast else ('.tmt',)
     if not file.exists():
         error_print(f'ERROR: {app_name}: File {filename!r} not found')
         sysexit(-1)
     if not file.is_file():
         error_print(f'ERROR: {app_name}: {filename!r} is not a file')
         sysexit(-1)
-    if file.suffix not in ('.tmt',):
-        error_print(f'ERROR: {app_name}: expected <file>.tmt,',
+    if not any(file.name.endswith(suffix) for suffix in suffixes):
+        error_print(f'ERROR: {app_name}: expected <file>.tmt' +
+                    (' or <file>.ast.json,' if allow_ast else ','),
                     f'got {filename!r}')
         sysexit(-1)
     return file
+
+
+def get_func_name(fn: FunctionCall | FunctionDefinition) -> str:
+    """ Get TMT function name as str """
+    return fn.name.name
+
+
+def identifier_info(ident: str | Identifier, objects: TmtObjectsTrack) -> str:
+    """ Get info about identifier """
+    if not objects.check_exists(ident):
+        return "<Not Found>"
+    obj: TmtObject | None = objects.get(ident)
+    assert obj is not None, 'expected name to exist, '\
+        f'but got None. Context: {objects}'
+    if isinstance(obj, FunctionDefinition):
+        raise NotImplementedError  # TODO: implement
+    return (f'<{obj.__class__.name} "{obj.name.name}":{obj.datatype.name}' +
+            (f'={obj.datatype.subtype}>' if obj.datatype.subtype else '>'))

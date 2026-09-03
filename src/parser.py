@@ -27,94 +27,20 @@ from .ast_ import (
     Identifier, Constant, Variable,
     DataType, Literal, Pass,
     FunctionDefinition, FunctionCall,
-    Program, Node, Expression
+    Program, Node, Expression,
+    Statement, GetVar
 )
 from .tokens import Token, TokenType
 from .errors import error_print, warn_print, token_error, ParseError
-from .text import Text
+from .text import Text, Pos
 from .utils import suggest_name
-from .builtins import (
-    TmtObject, TMT_BUILTIN_CONSTS, TMT_BUILTIN_VARS, NOTHING, NEWLINE
+from .builtins_ import (
+    TmtObjectsTrack, TmtObject, NOTHING, NEWLINE
 )
 
 
 # !!START!!
 # TODO: for import purposes should form dependency tree for the IMPORT
-@dataclass
-class TmtObjectsTrack:
-    """ Tracks used TMT Objects """
-    names: List[Identifier] =\
-        field(default_factory=list)
-    consts: Dict[Identifier, Constant] =\
-        field(default_factory=dict)
-    variables: Dict[Identifier, Variable] =\
-        field(default_factory=dict)
-    functions: Dict[Identifier, FunctionDefinition] =\
-        field(default_factory=dict)
-
-    def add(self, obj: TmtObject) -> bool:
-        """ Add new object """
-        if not isinstance(obj, type_get_args(TmtObject)):
-            error_print("ERROR: TmtObjectsTrack: Could not add object of type",
-                        str(type(obj)),
-                        "to track. Expected:", str(type_get_args(TmtObject)))
-            return False
-        if self.check_exists(obj.name):
-            return False  # Return false if exists
-        self.names.append(obj.name)
-        if isinstance(obj, Constant):
-            self.consts[obj.name] = obj
-        elif isinstance(obj, Variable):
-            self.variables[obj.name] = obj
-        elif isinstance(obj, FunctionDefinition):
-            self.functions[obj.name] = obj
-        else:
-            assert False, "Unreachable"
-        return True
-
-    def pop(self, name: Identifier | str) -> TmtObject | None:
-        """ Checks if name exists and pops it out. Otherwise returns None"""
-        name = Identifier(name) if isinstance(name, str) else name
-        if self.check_exists(name):
-            res = self.consts.pop(name) if name in self.consts else (
-                self.variables.pop(name) if name in self.variables
-                else (self.functions.pop(name) if name in self.functions
-                      else None)
-            )  # pop object
-            self.names.pop(self.names.index(name))  # remove name
-            return res
-        return None
-
-    def get(self, name: Identifier | str) -> TmtObject | None:
-        """ Checks if name exists and returns it. Otherwise returns None"""
-        name = Identifier(name) if isinstance(name, str) else name
-        if self.check_exists(name):
-            return self.consts.get(name) if name in self.consts else (
-                self.variables.get(name) if name in self.variables
-                else (self.functions.get(name) if name in self.functions
-                      else None)
-            )
-        return None
-
-    def check_exists(self, name: Identifier | str) -> bool:
-        """ Check if Identifier is already tracked """
-        res = Identifier(name) if isinstance(name, str) else name
-        return isinstance(res, Identifier) and res in self.names
-
-    def setup_builtins(self) -> None:
-        """ Setup builtins to track """
-        for defaults in (TMT_BUILTIN_CONSTS, TMT_BUILTIN_VARS):
-            for name, obj in defaults.items():
-                if self.check_exists(name):
-                    warn_print(f'WARN: TmtObjectsTrack.setup: name "{name}" is'
-                               ' already defined')
-                    continue
-                if not self.add(obj):
-                    warn_print('WARN: TmtObjectsTrack.setup: couldn\'t add '
-                               f'"{name}" to track')
-                    continue
-
-
 @dataclass
 class ParserContext:
     """ Shared parser context """
@@ -211,7 +137,11 @@ def process_expression(ctx: ParserContext) -> None:
 
 def fn_the_meaning_of(ctx: ParserContext) -> Expression:
     """ Process 'the meaning of' statement """
-    tok: Token | None = ctx.next_token()
+    tok: Token | None = ctx.get_token()
+    assert tok is not None, "exprected the `meaning of`, but got None"
+    start_pos: Pos = tok.start_pos
+    end_pos: Pos = tok.end_pos
+    tok = ctx.next_token()
     if tok is None:
         error_print('ERROR: fn_the_meaning_of: got None')
         ctx.perror = ParseError.TOKENERR
@@ -225,13 +155,19 @@ def fn_the_meaning_of(ctx: ParserContext) -> Expression:
     if not ctx.objects.check_exists(tok.body):
         suggestion: str | None = suggest_name(
             tok.body,
-            [str(i.name) for i in ctx.objects.names]
+            ctx.objects.names_as_str()
         )
         token_error(tok, ctx.source, f'Name "{tok.body}" is not defined' +
                     (f'. Did you mean "{suggestion}"?' if suggestion else ''))
         ctx.perror = ParseError.SYNTAXERR
         return NOTHING
-    return type_cast(Expression, ctx.objects.get(tok.body) or NOTHING)
+    if ctx.objects.is_constant(tok.body):
+        obj: TmtObject | None = ctx.objects.get(tok.body)
+        assert isinstance(obj, Constant), \
+            f"Expected constant, but got {type(obj)!r}"
+        return Literal(obj.value, obj.datatype)
+    end_pos = tok.end_pos
+    return GetVar(position=(start_pos, end_pos), target=Identifier(tok.body))
 
 
 def process_args(ctx: ParserContext) -> List[Expression]:
@@ -260,9 +196,9 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
     res = FunctionCall((tok.start_pos, tok.end_pos),
                        Identifier("PRINT"), [])
     if output == 'stdout':
-        res.args.append(Identifier('STDOUT'))
+        res.args.append(Literal('STDOUT', DataType('text')))
     elif output == 'stderr':
-        res.args.append(Identifier('STDERR'))
+        res.args.append(Literal('STDERR', DataType('text')))
     elif output == 'ident':
         tok = ctx.next_token()
         if not tok:
@@ -280,7 +216,9 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
             ctx.perror = ParseError.SYNTAXERR
             ctx.eof()
             return Pass()
-        res.args.append(Identifier(tok.body))
+        res.args.append(GetVar(
+            (tok.start_pos, tok.end_pos),
+            Identifier(tok.body)))
         res.position = (res.position[0], tok.end_pos)
     elif output == 'path':
         tok = ctx.next_token()

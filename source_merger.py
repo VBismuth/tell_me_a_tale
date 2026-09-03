@@ -46,8 +46,9 @@ SOURCE_SCHEME: List[str] = [
     'tokens',
     'lexer',
     'ast_',
-    'builtins',
+    'builtins_',
     'parser',
+    'interpreter',
     'tests',
     'main'
 ]
@@ -57,7 +58,7 @@ INCLUDES: Dict[str, List[str]] = {
     'textwrap': ['fill as tw_fill'],
     'pathlib': ['Path'],
     'difflib': ['get_close_matches'],
-    'sys': ['stderr', 'exit as sysexit',
+    'sys': ['stdout', 'stderr', 'exit as sysexit',
             'argv as sysargs'],
     'typing': beautify_imports(
         ['Generator', 'Callable', 'Union',

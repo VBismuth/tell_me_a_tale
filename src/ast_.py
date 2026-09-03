@@ -70,6 +70,13 @@ class ListLiteral:
 
 
 @dataclass
+class GetVar:
+    """ Get variable or constant """
+    position: Tuple[Pos, Pos]
+    target: Identifier
+
+
+@dataclass
 class TMTImport:
     """ Import C lib or TMT module """
     position: Tuple[Pos, Pos]
@@ -213,7 +220,7 @@ class ReturnStatement:
 
 @dataclass
 class Pass:
-    """ Stub for empty programm """
+    """ Stub for empty program """
 
 
 @dataclass
@@ -226,6 +233,7 @@ class Program:
 Expression = Union[
     Variable,
     Constant,
+    GetVar,
     Literal,
     ListLiteral,
     Identifier,

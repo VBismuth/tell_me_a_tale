@@ -26,6 +26,9 @@ from .tokens import AnyToken
 
 # !!START!!
 DEFAULT_INDENT = ' '
+COREERR_OFFSET = 10
+RUNTIMEERR_OFFSET = 20
+PARSEERR_OFFSET = 30
 
 
 class Colors(Enum):
@@ -57,7 +60,7 @@ class Colors(Enum):
 class ParseError(Enum):
     """ Parser Errors """
     OK           = 0
-    TOKENERR     = iota()
+    TOKENERR     = PARSEERR_OFFSET
     SYNTAXERR    = iota()
     PARAMETERERR = iota()
 
@@ -65,7 +68,8 @@ class ParseError(Enum):
 class TMTRuntimeError(Enum):
     """ Runtime Errors """
     OK               = 0
-    IOERR            = iota()
+    STATEMENTERR     = RUNTIMEERR_OFFSET
+    VALUEERR         = iota()
     FILEEXISTSERR    = iota()
     FILENOTFOUNDERR  = iota()
 
@@ -137,7 +141,7 @@ def token_error(token: AnyToken,
 def error_print(*args: Any, **kwargs: Any) -> None:
     """ Print error message to stderr """
     if not args:
-        print()
+        print(Colors.RESET.value)
         return
     args = (Colors.FG_RED.value + str(args[0]),) + args[1:]
     args = args + (Colors.RESET.value,)
