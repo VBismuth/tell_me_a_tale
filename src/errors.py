@@ -92,14 +92,17 @@ def print_underline(indent: int, size: int,
 
 
 def error_message(start_pos: Pos, end_pos: Pos,
-                  text: Text, message: str,
-                  message_color: Colors = Colors.RESET) -> None:
+                  text: Optional[Text], message: str,
+                  message_color: Colors = Colors.FG_RED) -> None:
     """ Print error message """
     if not isinstance(message_color, Colors):
         message_color = Colors.RESET
-    print(f'{text.file}:{start_pos.line}:{start_pos.column} :: '
-          f'{message_color.value}{message}{Colors.RESET.value}',
-          file=stderr)
+    print(f'{text.file if text else '<string>'}:{start_pos.line}'
+          f':{start_pos.column} :: {message_color.value}{message}'
+          f'{Colors.RESET.value}', file=stderr)
+    if not isinstance(text, Text) or len(text.text) < 1:
+        print(Colors.RESET.value, end='')
+        return
     print(Colors.FG_MAGENTA.value, end='', file=stderr)
     line_num_size: int = len(str(max(start_pos.line, end_pos.line)))
     start_pos_num: str = f'{start_pos.line:0{line_num_size}d} |'
