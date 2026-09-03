@@ -49,7 +49,6 @@ SOURCE_SCHEME: List[str] = [
     'builtins_',
     'parser',
     'interpreter',
-    'tests',
     'main'
 ]
 INCLUDES: Dict[str, List[str]] = {
@@ -63,13 +62,10 @@ INCLUDES: Dict[str, List[str]] = {
     'typing': beautify_imports(
         ['Generator', 'Callable', 'Union',
          'Optional', 'Type', 'Any',
-         'Tuple', 'List', 'Dict',
-         'TextIO', 'Callable',
-         'cast as type_cast',
+         'Tuple', 'List', 'Dict', 'TextIO',
          'get_args as type_get_args']),
     'dataclasses': ['dataclass', 'field'],
     'enum': ['Enum', 'auto as iota'],
-    'unittest': ['TestCase', 'main as unittestmain']
 }
 HEADER_TEXT: str = '''# -*- coding: utf8 -*-
 #   Tell Me a Tale, a small story-like programming language.

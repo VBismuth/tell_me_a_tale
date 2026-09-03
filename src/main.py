@@ -29,7 +29,6 @@ from .errors import (
     DEFAULT_INDENT, warn_print, error_print,
     ParseError, TMTRuntimeError
 )
-from .tests import run_tests
 from .text import Text
 from .tokens import Token
 from .lexer import tokenize
@@ -45,8 +44,6 @@ APP_OPTIONS: Dict[str, List[str]] = {
     'info':        ['', 'Shows info about TMT'],
     'read':        ['<file>', 'Runs a script from provided file'],
     'tell':        ['<str>', 'Runs a script from provided string'],
-    'test':        ['[name[, ...]]', 'Runs self tests by name or names '
-                    '(optional) or just runs all tests'],
     'translate':   ['<file>', 'Translates file to AST and dumps it '
                     'in JSON format into the current directory '
                     'as "<file>.ast.json"'],
@@ -196,9 +193,6 @@ def main(argv: List[str]) -> None:
         app_info(app_name)
         sysexit()
 
-    if argv[1] == 'test':
-        print(app_name.capitalize(), 'is doing tests...')
-        run_tests(argv=[argv[0]] + argv[2:], verbosity=2)  # exits by default
     if argv[1] == 'interactive':
         raise NotImplementedError
         # sysexit(-1)
