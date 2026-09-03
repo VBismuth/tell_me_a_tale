@@ -138,8 +138,9 @@ def app_read(app_name: str, target: str) -> None:
         prog = ast_from_dict(json.loads(file.read_text('utf8')))
         assert isinstance(prog, Program), \
             f"expected to get Program, got {type(prog)}"
+        innerfile = Path(prog.file)
         source = Text.new(
-            check_tmt_file(app_name, prog.file).read_text('utf8'),
+            innerfile.read_text('utf8') if innerfile.is_file() else '',
             prog.file
         )
         runctx = RuntimeContext.setup(
@@ -173,7 +174,7 @@ def app_tell(app_name: str, text: str) -> None:
 def main(argv: List[str]) -> None:
     """ Main function """
     argn: int = len(argv)
-    app_name: str = argv[0]
+    app_name: str = Path(argv[0]).name
     # TODO: add documentation option
     if any((pattern in argv)
            for pattern in ('--help', 'help', '-h')):

@@ -18,10 +18,10 @@
 """ Some utils for the TMT """
 
 from dataclasses import dataclass, field
-from typing import List, Any
+from typing import List, Any, Tuple
 
-from .text import Text
-from .errors import error_print, TMTRuntimeError
+from .text import Text, Pos
+from .errors import error_message, TMTRuntimeError
 from .ast_ import (
     Program, FunctionCall, Literal,
     DataType, Identifier, Pass, GetVar, Node,
@@ -37,6 +37,7 @@ class RuntimeContext:
     """ TMT runtime context """
     source: Text
     program: Program
+    source_pos: Tuple[Pos, Pos]
     objects: TmtObjectsTrack = field(default_factory=TmtObjectsTrack)
     rerror: TMTRuntimeError = TMTRuntimeError.OK
     exiting: bool = False
@@ -46,12 +47,14 @@ class RuntimeContext:
     def setup(source: Text, program: Program,
               *args: Any, **kwargs: Any) -> RuntimeContext:
         """ Setup new instance of runtime context """
-        ctx: RuntimeContext = RuntimeContext(source, program, *args, **kwargs)
+        ctx: RuntimeContext = RuntimeContext(source, program,
+                                             (Pos(), Pos()),
+                                             *args, **kwargs)
         ctx.objects.setup_builtins()
         return ctx
 
 
-def get_tmt_value(val: str, type_: DataType) -> Any:
+def get_tmt_value(ctx: RuntimeContext, val: str, type_: DataType) -> Any:
     """ Get value """
     if type_.name == 'text':
         if val == '_BUILTIN_SELF':
@@ -68,7 +71,12 @@ def get_tmt_value(val: str, type_: DataType) -> Any:
     if type_.name == 'number':
         return float(val)
     if type_.name != 'none':
-        error_print(f'ERROR: get_tmt_value: unknown type "{type_}"')
+        error_message(
+            *ctx.source_pos,
+            ctx.source,
+            f'Cannot get value of unknown type "{type_}"'
+        )
+        ctx.rerror = TMTRuntimeError.VALUEERR
     return None
 
 
@@ -76,23 +84,33 @@ def interp_expression(ctx: RuntimeContext,
                       expr: Node) -> Any:
     """ Process args for the builtin function """
     if isinstance(expr, Literal):
-        return get_tmt_value(expr.value, expr.valtype)
+        return get_tmt_value(ctx, expr.value, expr.valtype)
     if isinstance(expr, (Identifier, GetVar)):
-        target: Identifier = expr.target if isinstance(expr, GetVar) else expr
+        if isinstance(expr, GetVar):
+            target: Identifier = expr.target
+            ctx.source_pos = expr.position
+        else:
+            target = expr
         obj: TmtObject | None = ctx.objects.get(target)
         if not obj:
             suggestion = suggest_name(target.name, ctx.objects.names_as_str())
-            error_print(
-                f'ERROR: interpreter: unknown name {target.name!r}' +
+            error_message(
+                *ctx.source_pos,
+                ctx.source,
+                f'Unknown name {target.name!r}' +
                 (f'. Did you mean {suggestion!r}?' if suggestion else '')
             )
             ctx.rerror = TMTRuntimeError.VALUEERR
             return None
-        return (get_tmt_value(obj.value, obj.datatype)
+        return (get_tmt_value(ctx, obj.value, obj.datatype)
                 if isinstance(expr, GetVar) and
                 isinstance(obj, (Variable, Constant))
                 else identifier_info(target, ctx.objects))
-    error_print(f'ERROR: interp_expression: unknown expression "{expr}"')
+    error_message(
+        *ctx.source_pos,
+        ctx.source,
+        f'Unknown expression "{expr}"'
+    )
     ctx.rerror = TMTRuntimeError.VALUEERR
     return None
 
@@ -100,6 +118,10 @@ def interp_expression(ctx: RuntimeContext,
 def interp(ctx: RuntimeContext) -> TMTRuntimeError:
     """ Interprete program until the end or halt """
     for statement in ctx.program.body:
+        if hasattr(statement, 'position'):
+            ctx.source_pos = statement.position
+        if ctx.rerror != TMTRuntimeError.OK or ctx.exiting:
+            break
         if isinstance(statement, Pass):
             continue
         if isinstance(statement, FunctionCall) and\
@@ -107,10 +129,16 @@ def interp(ctx: RuntimeContext) -> TMTRuntimeError:
             # TODO: work with function returns
             args: List[Any] = [interp_expression(ctx, expr)
                                for expr in statement.args]
+            if ctx.rerror != TMTRuntimeError.OK:
+                break
             TMT_BUILTIN_FUNCS[get_func_name(statement)](*args)
         else:
-            error_print("ERROR: interpreter: unknown",
-                        f"statement {str(statement)!r}")
+            error_message(
+                *ctx.source_pos,
+                ctx.source,
+                "ERROR: interpreter: unknown "
+                f"statement {str(statement)!r}"
+            )
             ctx.rerror = TMTRuntimeError.STATEMENTERR
     print(end='', flush=True)  # so builtin_print wont stay unflushed
     return ctx.rerror

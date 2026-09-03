@@ -34,6 +34,11 @@ class DataType:
     name: str = 'none'
     subtype: Optional[str] = None
 
+    def __str__(self) -> str:
+        return (
+            f'{self.name}={self.subtype}' if self.subtype else str(self.name)
+        )
+
 
 @dataclass(frozen=True)
 class Identifier:
