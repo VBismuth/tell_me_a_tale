@@ -35,7 +35,7 @@ PYTHON_EXT: str = '.py'
 BLANK_LINES: str = '\n' * 3
 
 # Config
-TARGET_DIR: Path = Path('tmp')
+TARGET_DIR: Path = Path('build')
 TARGET: str = 'storyteller'
 SOURCE_DIR: Path = Path('src')
 SOURCE_SCHEME: List[str] = [
@@ -153,6 +153,7 @@ def _main() -> None:
         merged_file = post_processing(merged_file)
 
     target_file: Path = TARGET_DIR / (TARGET + PYTHON_EXT)
+    target_file.parent.mkdir(exist_ok=True, parents=True)
     target_file.touch(exist_ok=True)
     target_file.write_text(merged_file)
     print('\033[94mINFO: Merged to',  # ]
