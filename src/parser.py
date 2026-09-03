@@ -178,6 +178,13 @@ def process_args(ctx: ParserContext) -> List[Expression]:
     assert tok is not None, "ERROR: process_args: expected token, got None"
     if tok.body.lower() == 'the meaning of':
         res.append(fn_the_meaning_of(ctx))
+    elif tok.type_ == TokenType.WORD:
+        res.append(Literal(
+            concatinate_words(ctx).body,
+            DataType('text')
+        ))
+    elif tok.type_ == TokenType.STRING:
+        res.append(Literal(tok.body, DataType('text')))
     else:
         token_error(tok, ctx.source,
                     f'Unexpected keyword, literal or expression: {str(tok)}')
