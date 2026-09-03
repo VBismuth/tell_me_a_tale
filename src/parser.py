@@ -185,6 +185,8 @@ def process_args(ctx: ParserContext) -> List[Expression]:
         ))
     elif tok.type_ == TokenType.STRING:
         res.append(Literal(tok.body, DataType('text')))
+    elif tok.type_ == TokenType.IDENTIFIER:
+        res.append(Identifier(tok.body))
     else:
         token_error(tok, ctx.source,
                     f'Unexpected keyword, literal or expression: {str(tok)}')

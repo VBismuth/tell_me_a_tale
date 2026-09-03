@@ -54,7 +54,17 @@ class RuntimeContext:
 def get_tmt_value(val: str, type_: DataType) -> Any:
     """ Get value """
     if type_.name == 'text':
-        return val if val != '_BUILTIN_SELF' else tmt_get_self()
+        if val == '_BUILTIN_SELF':
+            return tmt_get_self()
+        res = val.replace(r'\\', '!!BACK_SLASH!!')
+        escape_chars = {
+            r'\a': '\a', r'\b': '\b', r'\f': '\f', r'\n': '\n',
+            r'\r': '\r', r'\t': '\t', r'\v': '\v', r"\'": "'",
+            r'\"': '"',
+        }
+        for fake_char, true_char in escape_chars.items():
+            res = res.replace(fake_char, true_char)
+        return res.replace('!!BACK_SLASH!!', '\\')
     if type_.name == 'number':
         return float(val)
     if type_.name != 'none':

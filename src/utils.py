@@ -81,5 +81,6 @@ def identifier_info(ident: str | Identifier, objects: TmtObjectsTrack) -> str:
         f'but got None. Context: {objects}'
     if isinstance(obj, FunctionDefinition):
         raise NotImplementedError  # TODO: implement
-    return (f'<{obj.__class__.name} "{obj.name.name}":{obj.datatype.name}' +
+    return (f'<{obj.__class__.__name__} ' +
+            f'"{obj.name.name}" : {obj.datatype.name}' +
             (f'={obj.datatype.subtype}>' if obj.datatype.subtype else '>'))
