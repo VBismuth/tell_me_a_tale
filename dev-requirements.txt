@@ -1,2 +1,2 @@
-mypy==1.19.1
-Nuitka==4.0.6
+mypy==2.3.1
+Nuitka==4.2
