@@ -27,7 +27,7 @@ from . import TMT_VERSION, TMT_LICENSE, TMT_AUTHOR
 from .ast_ import ast_to_dict, ast_from_dict, Program
 from .errors import (
     DEFAULT_INDENT, warn_print, error_print,
-    ParseError, TMTRuntimeError
+    ParseError, TMTRuntimeError, Colors
 )
 from .text import Text
 from .tokens import Token
@@ -38,6 +38,7 @@ from .interpreter import RuntimeContext, interp
 
 
 # !!START!!
+CONSOLE_SYMBOL = "{magenta}{app_name}>{reset} "
 APP_OPTIONS: Dict[str, List[str]] = {
     # option: ['args', 'description']
     'help':        ['', 'Shows this message'],
@@ -171,6 +172,69 @@ def app_tell(app_name: str, text: str) -> None:
     sysexit(runctx.ret_code)
 
 
+def app_interactive(app_name: str) -> None:
+    """ Run in interactive mode """
+    # Warm up
+    source = Text.new('', file='<repl>')
+    ctx = ParserContext.setup(source, list(tokenize(source)))
+    prog = stage_parse(app_name, ctx)
+    runctx = RuntimeContext.setup(source, prog)
+
+    print(f'{Colors.FG_BLUE.value}TMT version v{TMT_VERSION}',
+          f'This program is licenced under {TMT_LICENSE}',
+          'In this mode . or ; will be appended automaticaly '
+          'at the end of line so you don\'t have to put them',
+          'Type "dump" to dump your commands to `storyteller_dump.txt`',
+          'Type "exit" or CTRL+C to exit the program',
+          sep='\n', end=f'{Colors.RESET.value}\n\n')
+    while not runctx.exiting:
+        try:
+            user_input: str = input(
+                CONSOLE_SYMBOL.format(
+                    magenta=Colors.FG_CYAN.value,
+                    app_name=app_name.lower(),
+                    reset=Colors.RESET.value,
+                )
+            )
+            if not user_input:
+                continue
+            if user_input.lower() == 'exit':
+                print('Exitting...')
+                break
+            if user_input.lower() == 'dump':
+                print('Dumping input history...')
+                Path('storyteller_dump.txt').write_text(
+                    source.text, encoding='utf8'
+                )
+                continue
+            if not user_input.endswith('.') or not user_input.endswith(';'):
+                user_input += ';'
+            source.text += user_input + '\n'
+            tokens = stage_tokenize(app_name, source)
+            ctx.source = source
+            ctx.tokens = tokens
+            prog = stage_parse(app_name, ctx)
+            runctx.source = source
+            runctx.program = prog
+            stage_interprete(app_name, runctx)
+        except KeyboardInterrupt:
+            warn_print(f'\n{app_name}: KeyboardInterrupt')
+            break
+        except EOFError:
+            warn_print(f'\n{app_name}: EOF')
+            break
+        except SystemExit as err:
+            error_print(f'Error code is {err}')
+            ctx.perror = ParseError.OK
+            runctx.rerror = TMTRuntimeError.OK
+            continue
+        except OSError as err:
+            error_print(f'\n{app_name}: {err}')
+            continue
+    sysexit(runctx.ret_code)
+
+
+# TODO: add stacktrace to errors during interpreting stage
 def main(argv: List[str]) -> None:
     """ Main function """
     argn: int = len(argv)
@@ -195,8 +259,7 @@ def main(argv: List[str]) -> None:
         sysexit()
 
     if argv[1] == 'interactive':
-        raise NotImplementedError
-        # sysexit(-1)
+        app_interactive(app_name)
 
     if argn < 3:
         error_print('ERROR: expected an argument')
