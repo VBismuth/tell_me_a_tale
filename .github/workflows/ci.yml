@@ -1,0 +1,140 @@
+name: CI & Release Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: write  # needded for making release drafts and uploading assets 
+
+jobs:
+  quality-and-test:
+    name: Type Checks and Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
+
+      - name: Run Mypy type checks
+        run: python -m mypy source_merger.py src --strict
+
+      - name: Run tests
+        run: python -m src.tests
+
+      - name: Merge source code
+        run: python source_merger.py
+
+      - name: Upload merged script artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: storyteller-script
+          path: ./build/storyteller.py
+
+  build:
+    name: Build Asset for ${{ matrix.os }}
+    needs: quality-and-test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: storyteller-linux
+            nuitka_flags: "--onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller"
+          - os: macos-latest
+            artifact_name: storyteller-macos
+            nuitka_flags: "--onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller"
+          - os: windows-latest
+            artifact_name: storyteller-windows
+            nuitka_flags: "--onefile --remove-output --output-dir=build --mingw64 --python-flag=-O --output-filename=storyteller"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
+
+      - name: Re-create merged script
+        shell: bash
+        run: python source_merger.py
+
+      - name: Build with Nuitka
+        shell: bash
+        run: python -m nuitka ${{ matrix.nuitka_flags }} build/storyteller.py
+
+      - name: Rename binaries to unique names
+        shell: bash
+        run: |
+          if [ -f build/storyteller.exe ]; then
+            mv build/storyteller.exe build/storyteller-windows.exe
+          elif [ -f build/storyteller ]; then
+            mv build/storyteller build/storyteller-${{ matrix.os == 'ubuntu-latest' && 'linux' || 'macos' }}
+          fi
+
+      - name: Upload compiled binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            build/storyteller-linux
+            build/storyteller-macos
+            build/storyteller-windows.exe
+          if-no-files-found: ignore
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    # Release is created only on push to master branch
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # for changelog generation
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Structure assets for release
+        run: |
+          mkdir final-assets
+          # Собираем все файлы в одну папку для удобной загрузки
+          find release-artifacts -type f -exec cp {} final-assets/ \;
+          ls -l final-assets/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: run-${{ github.run_number }}
+          name: Release Release ${{ github.run_number }} (Commit ${{ github.sha }})
+          draft: true  # ! We need it as draft only !
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            final-assets/*
