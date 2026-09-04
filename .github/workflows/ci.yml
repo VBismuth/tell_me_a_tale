@@ -38,15 +38,6 @@ jobs:
       - name: Run tests
         run: python -m src.tests
 
-      - name: Merge source code
-        run: python source_merger.py
-
-      - name: Upload merged script artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: storyteller-script
-          path: ./build/storyteller.py
-
   build:
     if: >
       (github.event_name == 'push' &&
@@ -86,9 +77,16 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
           
-      - name: Re-create merged script
+      - name: Generate merged script
         shell: bash
         run: python source_merger.py
+
+      - name: Upload merged script artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: storyteller-script
+          path: ./build/storyteller.py
 
       - name: Build with Nuitka
         shell: bash
