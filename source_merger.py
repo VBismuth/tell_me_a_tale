@@ -47,6 +47,7 @@ SOURCE_SCHEME: List[str] = [
     'lexer',
     'ast_',
     'builtins_',
+    'typecheck',
     'parser',
     'interpreter',
     'main'

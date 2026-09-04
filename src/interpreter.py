@@ -15,7 +15,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-""" Some utils for the TMT """
+""" Interpreter functions for TMT """
 
 from dataclasses import dataclass, field
 from typing import List, Any, Tuple
@@ -27,6 +27,7 @@ from .ast_ import (
     DataType, Identifier, Pass, GetVar, Node,
     Variable, Constant,
 )
+from .typecheck import is_valid_type
 from .builtins_ import TMT_BUILTIN_FUNCS, TmtObjectsTrack, TmtObject
 from .utils import get_func_name, suggest_name, tmt_get_self, identifier_info
 
@@ -69,8 +70,9 @@ def get_tmt_value(ctx: RuntimeContext, val: str, type_: DataType) -> Any:
             res = res.replace(fake_char, true_char)
         return res.replace('!!BACK_SLASH!!', '\\')
     if type_.name == 'number':
-        return float(val)
-    if type_.name != 'none':
+        return float(val) if type_.subtype is None or\
+            type_.subtype.startswith('f') else int(val)
+    if not is_valid_type(type_):
         error_message(
             *ctx.source_pos,
             ctx.source,
