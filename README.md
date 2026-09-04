@@ -15,8 +15,8 @@ Obviously, I don't expect this language to be used in production. I don't even k
 - [x] Base structure for the language
 - [ ] Expressions
 - [ ] Functions
-- [ ] Terminal I/O
-- [ ] Interpreter
+- [ ] Terminal I/O (1/2)
+- [x] Interpreter
 - [ ] External functions (FFI)
 - [ ] Modules ("Books") and imports
 - [ ] Filesystem operations (Read/Write)
@@ -26,6 +26,72 @@ Obviously, I don't expect this language to be used in production. I don't even k
 - [ ] Debugger?
 - [ ] Testing suite?
 
+## Quickstart
+### Requirements
+* python 3.14 or later
+* Nuitka 4.2 (for building)
+* C compiler (for building, `gcc` or `clang` on Linux or MacOS and `mingw` on Windows)
+
+### Running tests
+To run all tests, just use
+```shell
+python -m src.tests
+```
+
+You also can provide test names as an argument, for example
+```shell
+python -m src.test TestAst
+```
+
+### Getting the Interpreter
+There three ways to get interpreter.
+You can use it from src by `python -m src.main`, but it will be limited. It's better if you merge src into one single file using
+```shell
+python source_merger.py
+```
+It will create a `storyteller.py` in `build/` directory.
+
+If you want to get prebuilt binaries or python script, see [releases](https://github.com/VBismuth/tell_me_a_tale/releases) section.
+
+### Using the Interpreter
+>[!IMPORTANT]
+> Please note, the interpreter is still `WIP` and lacks a lot of featires
+> Right now it can only print text or values into the terminal
+
+To see all possible commands use
+```shell
+storyteller help
+```
+
+There's example for "Hello World" program from shell argument and from file
+```shell
+storyteller tell "Say Hello World."
+
+storyteller read ./examples/00_hello.tmt
+```
+
+TMT is also a quine. You can get a copy of it's full source code printed in terminal by running
+```shell
+storyteller tell "Tell me the meaning of \"SELF\"."
+```
+
 ## How to Build
-You cannot do it yet.
-It still WIP, but you can run `python source_merger.py` and it will merge TMT interpreter into single file `storyteller.py` and put it into tmp dir. Though it can only run tests at the moment.
+Ensure you have Nuitka installed in your system or venv
+```sh
+pip install nuitka
+```
+
+Then run sourcse_merger.py, so you'll get a merged source files
+```sh
+python sourcse_merger.py
+```
+
+_On Linux_ or _MacOS_ run
+```sh
+python -m nuitka --onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller build/storyteller.py
+```
+
+_On Windows_ run
+```sh
+python -m nuitka --mingw --onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller build/storyteller.py
+```
