@@ -90,7 +90,7 @@ jobs:
 
       - name: Build with Nuitka
         shell: bash
-        run: python -m nuitka ${{ matrix.nuitka_flags }} build/storyteller.py
+        run: yes | python -m nuitka ${{ matrix.nuitka_flags }} build/storyteller.py
 
       - name: Rename binaries to unique names
         shell: bash
@@ -131,7 +131,6 @@ jobs:
       - name: Structure assets for release
         run: |
           mkdir final-assets
-          # Собираем все файлы в одну папку для удобной загрузки
           find release-artifacts -type f -exec cp {} final-assets/ \;
           ls -l final-assets/
 
