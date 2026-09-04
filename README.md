@@ -28,9 +28,10 @@ Obviously, I don't expect this language to be used in production. I don't even k
 
 ## Quickstart
 ### Requirements
-* python 3.14 or later
+* python 3.14
+* mypy 2.3.1 (for type checking only)
 * Nuitka 4.2 (for building)
-* C compiler (for building, `gcc` or `clang` on Linux or MacOS and `mingw` on Windows)
+* C compiler (for building, `gcc` or `clang` on Linux or MacOS and `msvc` on Windows)
 
 ### Running tests
 To run all tests, just use
@@ -77,21 +78,21 @@ storyteller tell "Tell me the meaning of \"SELF\"."
 
 ## How to Build
 Ensure you have Nuitka installed in your system or venv
-```sh
+```shell
 pip install nuitka
 ```
 
 Then run sourcse_merger.py, so you'll get a merged source files
-```sh
+```shell
 python sourcse_merger.py
 ```
 
 _On Linux_ or _MacOS_ run
-```sh
+```shell
 python -m nuitka --onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller build/storyteller.py
 ```
 
 _On Windows_ run
-```sh
-python -m nuitka --mingw --onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller build/storyteller.py
+```shell
+python -m nuitka --msvc=latest --onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller build/storyteller.py
 ```
