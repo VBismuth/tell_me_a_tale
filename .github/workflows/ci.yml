@@ -48,6 +48,11 @@ jobs:
           path: ./build/storyteller.py
 
   build:
+    if: >
+      (github.event_name == 'push' &&
+       contains(github.event.head_commit.message, '[Release]')) ||
+      (github.event_name == 'pull_request' &&
+       contains(github.event.pull_request.title, '[Release]'))
     name: Build Asset for ${{ matrix.os }}
     needs: quality-and-test
     runs-on: ${{ matrix.os }}
@@ -62,7 +67,7 @@ jobs:
             nuitka_flags: "--onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller"
           - os: windows-latest
             artifact_name: storyteller-windows
-            nuitka_flags: "--onefile --remove-output --output-dir=build --mingw64 --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --remove-output --output-dir=build --msvc=latest --python-flag=-O --output-filename=storyteller"
 
     steps:
       - name: Checkout code
