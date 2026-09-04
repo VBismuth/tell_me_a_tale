@@ -96,3 +96,4 @@ _On Windows_ run
 ```shell
 python -m nuitka --msvc=latest --onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller build/storyteller.py
 ```
+Nuitka could prompt for downloading DependencyWalker for onefile building on Windows
