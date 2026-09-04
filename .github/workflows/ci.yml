@@ -90,7 +90,7 @@ jobs:
 
       - name: Build with Nuitka
         shell: bash
-        run: yes | python -m nuitka ${{ matrix.nuitka_flags }} build/storyteller.py
+        run: printf "y\ny\ny\ny\ny\n" | python -m nuitka ${{ matrix.nuitka_flags }} build/storyteller.py
 
       - name: Rename binaries to unique names
         shell: bash
