@@ -24,11 +24,7 @@ jobs:
         with:
           python-version: '3.14'
           cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
+          cache-dependency-path: dev-requirements.txt
 
       - name: Run Mypy type checks
         run: python -m mypy source_merger.py src --strict
@@ -71,12 +67,8 @@ jobs:
         with:
           python-version: '3.14'
           cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
-
+          cache-dependency-path: dev-requirements.txt
+          
       - name: Re-create merged script
         shell: bash
         run: python source_merger.py
