@@ -7,7 +7,6 @@ cd build
 python -m nuitka\
     --onefile\
     --output-dir=.\
-    --static-libpython=yes\
     --python-flag=-O\
     --output-filename=storyteller\
     storyteller.py

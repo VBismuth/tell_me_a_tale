@@ -58,6 +58,7 @@ TARGET_DIR: Path = Path('build')
 TARGET: str = 'storyteller'
 SOURCE_DIR: Path = Path('src')
 SOURCE_SCHEME: List[str] = [
+    'interactive_input',
     '__init__',
     'utils',
     'text',
@@ -74,11 +75,11 @@ SOURCE_SCHEME: List[str] = [
 INCLUDES: Dict[str, List[str]] = {
     're': [INCLUDE_AS_MODULE],
     'json': [INCLUDE_AS_MODULE],
-    'readline': [INCLUDE_AS_MODULE],
     'textwrap': ['fill as tw_fill'],
     'pathlib': ['Path'],
     'difflib': ['get_close_matches'],
-    'sys': ['stdout', 'stderr', 'exit as sysexit',
+    'sys': [INCLUDE_AS_MODULE,
+            'stdout', 'stderr', 'exit as sysexit',
             'argv as sysargs'],
     'typing': beautify_imports(
         ['Generator', 'Callable', 'Union',
