@@ -9,28 +9,47 @@ def _format(text: str) -> str:
     return SPECIAL_FORMAT.format(text)
 
 
-def beautify_imports(to_include: List[str], treshold: int = 40) -> List[str]:
+def beautify_imports(including: List[str], treshold: int = 40) -> List[str]:
     """ Make large imports more clean by splitting large chunks """
-    if not to_include:
-        return [INCLUDE_AS_MODULE]
     ident: str = ' ' * 4
-    res: List[str] = [f'(\n{ident}{to_include[0]}']  # )
-    text_size: int = len(to_include[0]) + 2
-    for include in to_include[1:]:
-        if include == INCLUDE_AS_MODULE:
-            return [INCLUDE_AS_MODULE]
-        if text_size >= treshold:
+    is_init: bool = False
+    if not including or including[0] == INCLUDE_AS_MODULE:
+        res: List[str] = [INCLUDE_AS_MODULE]
+        to_include: List[str] = including[1:]
+    elif including[0] == INCLUDE_AS_ALIAS:
+        res = [*including[:2]]
+        to_include = including[2:]
+    else:
+        res = []
+        to_include = including
+    text_size: int = len(to_include[0]) + len(', ')
+    should_pass: bool = False
+    for include in to_include:
+        if should_pass:
+            should_pass = False
+            res.append(include)
+        elif not include or include == INCLUDE_AS_MODULE:
+            res.append(INCLUDE_AS_MODULE)
+        elif include == INCLUDE_AS_ALIAS:
+            should_pass = True
+            res.append(include)
+        elif not is_init:
+            is_init = True
+            res.append(f'(\n{ident}{include}')  # )
+            text_size = len(include) + len(', ')
+        elif text_size >= treshold:
             res.append(f'\n{ident}{include}')
-            text_size = len(include) + 2
-            continue
-        res.append(include)
-        text_size += len(include) + 2
+            text_size = len(include)  + len(', ')
+        else:
+            res.append(include)
+            text_size += len(include) + len(', ')
     res[-1] = f'{res[-1]}\n)'
     return res
 
 
 SPECIAL_FORMAT: str = '!!{}!!'
 INCLUDE_AS_MODULE: str = _format('module')
+INCLUDE_AS_ALIAS: str = _format('module_alias')
 PYTHON_EXT: str = '.py'
 BLANK_LINES: str = '\n' * 3
 
@@ -131,12 +150,27 @@ def _load_file(file: Path) -> str:
 def _main() -> None:
     merged_file: str = HEADER_TEXT
     for module, includes in INCLUDES.items():
-        merged_file += '\n'
-        if INCLUDE_AS_MODULE in includes:
-            merged_file += f'import {module}'
-        else:
-            merged_file += f'from {module} import '\
-                f'{", ".join(includes).replace(', \n', ',\n')}'
+        index = 0
+        from_module: List[str] = []
+        while index < len(includes):
+            include = includes[index]
+            if include == INCLUDE_AS_MODULE:
+                merged_file += f'\nimport {module}'
+            elif include == INCLUDE_AS_ALIAS:
+                if index + 1 >= len(includes):
+                    raise IndexError(
+                        'Expected an argument for INCLUDE_AS_ALIAS: '
+                        f'{{{module}:{includes}}}')
+                merged_file += f'\nimport {module} as {includes[index + 1]}'
+                index += 1
+            else:
+                from_module.append(include)
+            index += 1
+        merged_file += (
+            f'\nfrom {module} import '
+            f'{", ".join(from_module).replace(', \n', ',\n')}'
+            if from_module else '')
+
     for file in SOURCE_SCHEME:
         source: Path = SOURCE_DIR / (file + PYTHON_EXT)
         loaded: str = _load_file(source)
