@@ -17,6 +17,7 @@
 
 """ Main function for TMT interpreter """
 
+import readline
 from sys import argv as sysargs, exit as sysexit
 from typing import List, Dict
 from textwrap import fill as tw_fill
@@ -175,6 +176,7 @@ def app_tell(app_name: str, text: str) -> None:
 def app_interactive(app_name: str) -> None:
     """ Run in interactive mode """
     # Warm up
+    readline.clear_history()
     source = Text.new('', file='<repl>')
     ctx = ParserContext.setup(source, list(tokenize(source)))
     prog = stage_parse(app_name, ctx)
@@ -185,7 +187,7 @@ def app_interactive(app_name: str) -> None:
           'In this mode . or ; will be appended automaticaly '
           'at the end of line so you don\'t have to put them',
           'Type "dump" to dump your commands to `storyteller_dump.txt`',
-          'Type "exit" or CTRL+C to exit the program',
+          'Type "exit" or CTRL+D to exit the program',
           sep='\n', end=f'{Colors.RESET.value}\n\n')
     while not runctx.exiting:
         try:
@@ -195,17 +197,15 @@ def app_interactive(app_name: str) -> None:
                     app_name=app_name.lower(),
                     reset=Colors.RESET.value,
                 )
-            )
+            ).strip()
             if not user_input:
                 continue
             if user_input.lower() == 'exit':
-                print('Exitting...')
+                warn_print(f'{app_name}: Exitting...')
                 break
             if user_input.lower() == 'dump':
-                print('Dumping input history...')
-                Path('storyteller_dump.txt').write_text(
-                    source.text, encoding='utf8'
-                )
+                warn_print(f'{app_name}: Dumping input history...')
+                readline.write_history_file('storyteller_dump.txt')
                 continue
             if not user_input.endswith('.') or not user_input.endswith(';'):
                 user_input += ';'
@@ -219,9 +219,9 @@ def app_interactive(app_name: str) -> None:
             stage_interprete(app_name, runctx)
         except KeyboardInterrupt:
             warn_print(f'\n{app_name}: KeyboardInterrupt')
-            break
+            continue
         except EOFError:
-            warn_print(f'\n{app_name}: EOF')
+            warn_print(f'\n{app_name}: Exitting')
             break
         except SystemExit as err:
             error_print(f'Error code is {err}')

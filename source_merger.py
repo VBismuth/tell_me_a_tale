@@ -55,6 +55,7 @@ SOURCE_SCHEME: List[str] = [
 INCLUDES: Dict[str, List[str]] = {
     're': [INCLUDE_AS_MODULE],
     'json': [INCLUDE_AS_MODULE],
+    'readline': [INCLUDE_AS_MODULE],
     'textwrap': ['fill as tw_fill'],
     'pathlib': ['Path'],
     'difflib': ['get_close_matches'],
