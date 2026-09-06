@@ -52,10 +52,10 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: storyteller-linux
-            nuitka_flags: "--onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller"
           - os: macos-latest
             artifact_name: storyteller-macos
-            nuitka_flags: "--onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --remove-output --output-dir=build --clang --python-flag=-O --output-filename=storyteller"
           - os: windows-latest
             artifact_name: storyteller-windows
             nuitka_flags: "--onefile --remove-output --output-dir=build --msvc=latest --python-flag=-O --output-filename=storyteller"
