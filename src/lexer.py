@@ -18,7 +18,7 @@
 """ Lexer for the TMT """
 
 import re
-from typing import Generator
+from typing import Generator, Optional
 
 from .tokens import (
     TokenType, Token,
@@ -133,13 +133,18 @@ def clean_token(tok: AnyToken) -> None:
         tok.type_ = TokenType.KEYWORD
 
 
-def tokenize(text: Text, pattern: str = MULTIPATTERN,
+def tokenize(text: Text,
              meta: TokenMeta = TokenMeta(
+                 pattern=MULTIPATTERN,
                  clean_func=clean_token),
              text_offset: int = 0,
+             text_end: Optional[Pos] = None,
              tokenize_expr: bool = True) -> Generator[AnyToken]:
     """ Token generator from text """
-    for match in re.finditer(pattern, text.text, re.IGNORECASE):
+    text.set_pos(text_offset)
+    for match in re.finditer(
+            meta.pattern, text.get_rest(text_end), re.IGNORECASE
+    ):
         tokenname: str = match.lastgroup or 'NONE'
         body: str = match.group(tokenname)
         idx_start, idx_end = match.span(tokenname)
@@ -149,21 +154,20 @@ def tokenize(text: Text, pattern: str = MULTIPATTERN,
         pos_end: Pos = Pos(*text.get_pos(idx_end), idx_end)
         text.set_pos(idx_end)
         if tokenname == 'EXPRESSION' and tokenize_expr:
-            body = body.strip('_')
-            exp_text: Text = Text(
-                text=body,
-                current_pos=Pos()
-            )
             exp_meta: TokenMeta = TokenMeta(
+                pattern=EXPMULTIPATTERN,
                 token_object=ExpToken,
                 token_type=ExpTokenType,
                 clean_func=exp_clean,
             )
             yield from tokenize(
-                exp_text,
+                text,
                 meta=exp_meta,
-                pattern=EXPMULTIPATTERN,
                 text_offset=idx_start + 1,
+                text_end=Pos(
+                    *text.get_pos(idx_end - 1),
+                    idx_end - 1
+                ),
             )
         else:
             tok: AnyToken = meta.token_object(
@@ -179,14 +183,16 @@ def tokenize(text: Text, pattern: str = MULTIPATTERN,
             yield tok
 
 
-def exp_tokenize(text: Text, pattern: str = EXPMULTIPATTERN,
+def exp_tokenize(text: Text,
                  meta: TokenMeta = TokenMeta(
+                     pattern=EXPMULTIPATTERN,
                      token_object=ExpToken,
                      token_type=ExpTokenType,
                      clean_func=exp_clean,
-                 ), text_offset: int = 0) -> Generator[ExpToken]:
+                 ), text_offset: int = 0,
+                 text_end: Optional[Pos] = None) -> Generator[ExpToken]:
     """ Token generator for expressions from text """
-    for tok in tokenize(text, pattern, meta, text_offset, False):
+    for tok in tokenize(text, meta, text_offset, text_end, False):
         assert isinstance(tok, ExpToken), \
             f'exp_tokenizer encounter a wrong type "{type(tok)}", '\
             '"ExpToken" expected'

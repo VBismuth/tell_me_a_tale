@@ -127,6 +127,7 @@ AnyToken = Union[Token, ExpToken]
 @dataclass
 class TokenMeta:
     """ Token metadata """
+    pattern: str
     token_object: Type[AnyToken]  = Token
     token_type: Type[AnyTokenType] = TokenType
     clean_func: Optional[Callable[[AnyToken], None]] = None

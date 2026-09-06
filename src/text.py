@@ -18,6 +18,7 @@
 """ Working with source text """
 
 from dataclasses import dataclass
+from typing import Optional
 
 
 # !!START!!
@@ -72,7 +73,8 @@ class Text:
 
     def set_pos(self, idx: int = 0) -> None:
         """ Sets pos by index idx """
-        line, col = self.get_pos(idx)
+        # Need to ignore current index to not accumulate unessery columns
+        line, col = self.get_pos(idx, ignore_current_idx=True)
         self.current_pos.index = idx
         self.current_pos.line = line
         self.current_pos.column = col
@@ -86,6 +88,16 @@ class Text:
     def get_slice(self, start_pos: Pos, end_pos: Pos) -> str:
         """ Get slice from text from start to end positions """
         return self.text[start_pos.index:end_pos.index]
+
+    def get_rest(self, end_pos: Optional[Pos] = None) -> str:
+        """ Get slice of text from current position
+            to text end or end pos (optional)"""
+        if not isinstance(end_pos, Pos):
+            end_pos = Pos(
+                *self.get_pos(len(self.text)),
+                len(self.text)
+            )
+        return self.get_slice(self.current_pos, end_pos)
 
     def copy(self) -> Text:
         """ Copy self """

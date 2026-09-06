@@ -76,6 +76,7 @@ class TestTokenize(TestCase):
 
     def test_tokenize_output(self) -> None:
         """ Checks if output is correct """
+        self.text.set_pos()  # reset
         tokens: list[Token] = list(tokenize(self.text, tokenize_expr=False))
 
         result_str: str = ', '.join([str(token) for token in tokens])
@@ -84,15 +85,21 @@ class TestTokenize(TestCase):
             f'[EXPRESSION:{self.expression[1:31]}<...>]'
 
         self.assertEqual(result_str, expected_str)
+        self.assertEqual(f"_{tokens[0].body}_",
+                         self.text.get_slice(tokens[0].start_pos,
+                                             tokens[0].end_pos)
+                         )
 
     def test_tokenize_not_empty(self) -> None:
         """ Checks if tokens are generated """
+        self.text.set_pos()  # reset
         tokens: list[Token] = list(tokenize(self.text, tokenize_expr=False))
         self.assertGreater(len(tokens), 0,
                            "Tokens was not generated")
 
     def test_tokenize_right_size(self) -> None:
         """ Checks if tokens are generated of right size """
+        self.text.set_pos()  # reset
         tokens: list[Token] = list(tokenize(self.text, tokenize_expr=False))
         expected_size: int = 1
         self.assertEqual(len(tokens), expected_size,
@@ -100,6 +107,7 @@ class TestTokenize(TestCase):
 
     def test_tokenize_returns_expected_types(self) -> None:
         """ Checks if type is correct """
+        self.text.set_pos()  # reset
         tokens: list[Token] = list(tokenize(self.text, tokenize_expr=False))
         for token in tokens:
             self.assertIsInstance(token.type_, TokenType,
@@ -115,9 +123,11 @@ class TestExpTokenize(TestCase):
         self.expression = '8 % 3 + 4 / (3 - 2^2 * 8) // 8.9 '\
             '+ $"Something" / exp(3.8)'
         self.text = Text(Pos(), self.expression)
+        self.text_multiple = Text.new("say.\nSay _1 + 3_.")
 
     def test_exp_tokenize_output(self) -> None:
         """ Checks if output is correct """
+        self.text.set_pos()  # reset
         tokens: list[ExpToken] = list(exp_tokenize(self.text))
 
         result_str: str = ', '.join([str(token) for token in tokens])
@@ -134,12 +144,14 @@ class TestExpTokenize(TestCase):
 
     def test_exp_tokenize_not_empty(self) -> None:
         """ Checks if tokens are generated """
+        self.text.set_pos()  # reset
         tokens: list[ExpToken] = list(exp_tokenize(self.text))
         self.assertGreater(len(tokens), 0,
                            "Expression tokens was not generated")
 
     def test_exp_tokenize_right_size(self) -> None:
         """ Checks if tokens are generated of right size """
+        self.text.set_pos()  # reset
         tokens: list[ExpToken] = list(exp_tokenize(self.text))
         expected_size: int = 24
         self.assertEqual(len(tokens), expected_size,
@@ -148,11 +160,25 @@ class TestExpTokenize(TestCase):
 
     def test_exp_tokenize_returns_expected_types(self) -> None:
         """ Checks if type is correct """
+        self.text.set_pos()  # reset
         tokens: list[ExpToken] = list(exp_tokenize(self.text))
         for token in tokens:
             self.assertIsInstance(token.type_, ExpTokenType,
                                   f"Token {str(token)} type is "
                                   f"incorrect")
+
+    def test_exp_hybrid_tokenize_output(self) -> None:
+        """ Checks if hybrid (regular + expression) output is correct """
+        self.text_multiple.set_pos()  # reset
+        tokens: list[AnyToken] = list(tokenize(self.text_multiple))
+
+        result_str: str = ', '.join([str(token) for token in tokens])
+        expected_str: str =\
+            '[KEYWORD:say], [TERMINATOR:.], [KEYWORD:Say], '\
+            '<[NUMBER:1]>, <[PLUS:+]>, <[NUMBER:3]>, [TERMINATOR:.]'
+
+        self.assertEqual(result_str, expected_str)
+        self.assertEqual(tokens[3].start_pos, Pos(2, 6, 10))
 
 
 def run_tests(*args: Any, **kwargs: Any) -> None:
