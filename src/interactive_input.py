@@ -121,7 +121,7 @@ class InteractiveInput:
     def write_history_file(self, filename: str = "history.txt") -> None:
         """ Saves history to a file, history.txt by default """
         with open(filename, 'a+', encoding='utf8') as f:
-            f.writelines(self.history)
+            f.write('\n'.join(self.history))
 
     def add_history(self, entry: str) -> None:
         """ Add entry to history """

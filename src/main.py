@@ -206,7 +206,7 @@ def app_interactive(app_name: str) -> None:
                 warn_print(f'{app_name}: Dumping input history...')
                 interactive_input.write_history_file('storyteller_dump.txt')
                 continue
-            if not user_input.endswith('.') or not user_input.endswith(';'):
+            if not user_input.endswith('.') and not user_input.endswith(';'):
                 user_input += ';'
             source.text += user_input + '\n'
             tokens = stage_tokenize(app_name, source)

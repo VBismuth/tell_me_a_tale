@@ -52,13 +52,13 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: storyteller-linux
-            nuitka_flags: "--onefile --remove-output --output-dir=build --lto=auto --clang --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --nofollow-import-to=*.site-packages --remove-output --output-dir=build --lto=auto --deployment --python-flag=-O --output-filename=storyteller"
           - os: macos-latest
             artifact_name: storyteller-macos
-            nuitka_flags: "--onefile --remove-output --output-dir=build --lto=auto --clang --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --remove-output --output-dir=build --lto=auto --deployment --clang --python-flag=-O --output-filename=storyteller"
           - os: windows-latest
             artifact_name: storyteller-windows
-            nuitka_flags: "--onefile --remove-output --windows-icon-from-ico=assets/tmt_logo.ico --assume-yes-for-downloads --output-dir=build --lto=auto --msvc=latest --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --remove-output --windows-icon-from-ico=assets/tmt_logo.ico --deployment --assume-yes-for-downloads --output-dir=build --lto=auto --msvc=latest --python-flag=-O --output-filename=storyteller"
 
     steps:
       - name: Checkout code

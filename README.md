@@ -1,6 +1,8 @@
 # ![TMT Logo](assets/tmt_logo.svg "Tell Me a Tale")  Tell Me a Tale
 
-A small programming language designed to be read like a story
+A small, statically typed and interpreted programming language designed to be read like a story
+
+TLDR; get the interpreter from [Releases](https://github.com/VBismuth/tell_me_a_tale/releases). For more info see [Quickstart](#Quickstart).
 
 ___
 
@@ -52,11 +54,11 @@ python source_merger.py
 ```
 It will create a `storyteller.py` in `build/` directory.
 
-If you want to get prebuilt binaries or python script, see [releases](https://github.com/VBismuth/tell_me_a_tale/releases) section.
+If you want to get prebuilt binaries or python script, see [Releases](https://github.com/VBismuth/tell_me_a_tale/releases) section.
 
 ### Using the Interpreter
 >[!IMPORTANT]
-> Please note, the interpreter is still `WIP` and lacks a lot of featires
+> Please note, the interpreter is still `WIP` and lacks a lot of features
 > Right now it can only print text or values into the terminal
 
 To see all possible commands use
@@ -77,22 +79,22 @@ storyteller tell "Tell me the meaning of \"SELF\"."
 ```
 
 ## How to Build
-Ensure you have Nuitka installed in your system or venv
+Ensure you have Nuitka installed in your system or [venv](https://docs.python.org/3/library/venv.html) (Recommended)
 ```shell
 pip install nuitka
 ```
 
-Then run sourcse_merger.py, so you'll get a merged source files
+Then run source_merger.py, so you'll get a merged source files
 ```shell
 python source_merger.py
 ```
 
 _On Linux_ or _MacOS_ run
 ```shell
-python -m nuitka --onefile --remove-output --output-dir=build --lto=auto --python-flag=-O --output-filename=storyteller build/storyteller.py
+python -m nuitka --onefile --deployment --remove-output --output-dir=build --lto=auto --python-flag=-O --output-filename=storyteller build/storyteller.py
 ```
 
 _On Windows_ run
 ```shell
-python -m nuitka --windows-app-icon=assets\tmt_logo.png --lto=auto --msvc=latest --onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller --assume-yes-for-downloads build\storyteller.py
+python -m nuitka --windows-app-icon=assets\tmt_logo.png --deployment --lto=auto --msvc=latest --onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller --assume-yes-for-downloads build\storyteller.py
 ```

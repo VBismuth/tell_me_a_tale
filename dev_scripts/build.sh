@@ -8,7 +8,9 @@ python -m nuitka\
     --onefile\
     --lto=auto\
     --assume-yes-for-downloads\
+    --nofollow-import-to=*.site-packages\
     --output-dir=.\
+    --deployment \
     --python-flag=-O\
     --output-filename=storyteller\
     storyteller.py
