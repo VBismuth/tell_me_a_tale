@@ -89,11 +89,11 @@ python sourcse_merger.py
 
 _On Linux_ or _MacOS_ run
 ```shell
-python -m nuitka --onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller build/storyteller.py
+python -m nuitka --onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller build/storyteller.py
 ```
 
 _On Windows_ run
 ```shell
-python -m nuitka --msvc=latest --onefile --remove-output --output-dir=build --static-libpython=yes --python-flag=-O --output-filename=storyteller build/storyteller.py
+python -m nuitka --windows-app-icon=assets\tmt_logo.png --msvc=latest --onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller build\storyteller.py
 ```
 Nuitka could prompt for downloading DependencyWalker for onefile building on Windows

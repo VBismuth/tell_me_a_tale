@@ -58,7 +58,7 @@ jobs:
             nuitka_flags: "--onefile --remove-output --output-dir=build --clang --python-flag=-O --output-filename=storyteller"
           - os: windows-latest
             artifact_name: storyteller-windows
-            nuitka_flags: "--onefile --remove-output --output-dir=build --msvc=latest --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --remove-output --windows-app-icon=assets/tmt_logo.png --output-dir=build --msvc=latest --python-flag=-O --output-filename=storyteller"
 
     steps:
       - name: Checkout code
@@ -92,13 +92,19 @@ jobs:
         shell: bash
         run: printf "y\ny\ny\ny\ny\n" | python -m nuitka ${{ matrix.nuitka_flags }} build/storyteller.py
 
-      - name: Rename binaries to unique names
+      - name: Pack binaries and resources
         shell: bash
         run: |
+          mkdir -p build/${{ matrix.artifact_name }}
+          [ -f "LICENSE" ] && cp "LICENSE" build/${{ matrix.artifact_name }}/
+          [ -f "README.md" ] && cp "README.md" build/${{ matrix.artifact_name }}/
+          [ -d "examples" ] && cp "examples" build/${{ matrix.artifact_name }}/examples
           if [ -f build/storyteller.exe ]; then
-            mv build/storyteller.exe build/storyteller-windows.exe
+            mv build/storyteller.exe build/${{ matrix.artifact_name }}/
+            zip -r build/${{ matrix.artifact_name }}.zip build/${{ matrix.artifact_name }}
           elif [ -f build/storyteller ]; then
-            mv build/storyteller build/storyteller-${{ matrix.os == 'ubuntu-latest' && 'linux' || 'macos' }}
+            mv build/storyteller build/${{ matrix.artifact_name }}/
+            tar -czf build/${{ matrix.artifact_name }}.tar.gz build/${{ matrix.artifact_name }}
           fi
 
       - name: Upload compiled binary artifact
@@ -106,9 +112,8 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: |
-            build/storyteller-linux
-            build/storyteller-macos
-            build/storyteller-windows.exe
+            build/${{ matrix.artifact_name }}.zip
+            build/${{ matrix.artifact_name }}.tar.gz
           if-no-files-found: ignore
 
   release:
@@ -137,8 +142,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: run-${{ github.run_number }}
-          name: Release Release ${{ github.run_number }} (Commit ${{ github.sha }})
+          tag_name: draft-${{ github.sha }}
+          name: Alpha Release commit-${{ github.sha }}
           draft: true  # ! We need it as draft only !
           prerelease: false
           generate_release_notes: true
