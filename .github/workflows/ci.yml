@@ -52,13 +52,13 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: storyteller-linux
-            nuitka_flags: "--onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --remove-output --output-dir=build --lto=auto --clang --python-flag=-O --output-filename=storyteller"
           - os: macos-latest
             artifact_name: storyteller-macos
-            nuitka_flags: "--onefile --remove-output --output-dir=build --clang --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --remove-output --output-dir=build --lto=auto --clang --python-flag=-O --output-filename=storyteller"
           - os: windows-latest
             artifact_name: storyteller-windows
-            nuitka_flags: "--onefile --remove-output --windows-app-icon=assets/tmt_logo.png --output-dir=build --msvc=latest --python-flag=-O --output-filename=storyteller"
+            nuitka_flags: "--onefile --remove-output --windows-icon-from-ico=assets/tmt_logo.ico --assume-yes-for-downloads --output-dir=build --lto=auto --msvc=latest --python-flag=-O --output-filename=storyteller"
 
     steps:
       - name: Checkout code
@@ -71,6 +71,10 @@ jobs:
           cache: 'pip'
           cache-dependency-path: dev-requirements.txt
 
+      - name: Install zip on Windows
+        if: matrix.os == 'windows-latest'
+        run: choco install zip -y
+
       - name: Install dependencies
         shell: bash
         run: |
@@ -80,7 +84,7 @@ jobs:
       - name: Generate merged script
         shell: bash
         run: python source_merger.py
-
+          
       - name: Upload merged script artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
@@ -90,7 +94,7 @@ jobs:
 
       - name: Build with Nuitka
         shell: bash
-        run: printf "y\ny\ny\ny\ny\n" | python -m nuitka ${{ matrix.nuitka_flags }} build/storyteller.py
+        run: python -m nuitka ${{ matrix.nuitka_flags }} build/storyteller.py
 
       - name: Pack binaries and resources
         shell: bash
@@ -98,13 +102,15 @@ jobs:
           mkdir -p build/${{ matrix.artifact_name }}
           [ -f "LICENSE" ] && cp "LICENSE" build/${{ matrix.artifact_name }}/
           [ -f "README.md" ] && cp "README.md" build/${{ matrix.artifact_name }}/
-          [ -d "examples" ] && cp "examples" build/${{ matrix.artifact_name }}/examples
+          [ -d "examples" ] && cp -r "examples" build/${{ matrix.artifact_name }}/examples
           if [ -f build/storyteller.exe ]; then
             mv build/storyteller.exe build/${{ matrix.artifact_name }}/
-            zip -r build/${{ matrix.artifact_name }}.zip build/${{ matrix.artifact_name }}
+            cd build
+            zip -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }}
+            cd -
           elif [ -f build/storyteller ]; then
             mv build/storyteller build/${{ matrix.artifact_name }}/
-            tar -czf build/${{ matrix.artifact_name }}.tar.gz build/${{ matrix.artifact_name }}
+            tar -czf build/${{ matrix.artifact_name }}.tar.gz -C build ${{ matrix.artifact_name }}
           fi
 
       - name: Upload compiled binary artifact

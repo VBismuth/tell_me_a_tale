@@ -25,7 +25,7 @@ from sys import exit as sysexit
 from . import TMT_SELF
 from .errors import error_print
 from .ast_ import FunctionCall, FunctionDefinition, Identifier
-from .builtins_ import TmtObject, TmtObjectsTrack
+from .builtins_ import TmtObject, TmtObjectsTrack, TMT_NATIVE_FUNCS
 
 
 # !!START!!
@@ -80,7 +80,10 @@ def identifier_info(ident: str | Identifier, objects: TmtObjectsTrack) -> str:
     assert obj is not None, 'expected name to exist, '\
         f'but got None. Context: {objects}'
     if isinstance(obj, FunctionDefinition):
-        raise NotImplementedError  # TODO: implement
+        objname: str = "Native function"\
+            if obj.name.name in TMT_NATIVE_FUNCS else 'Function'
+        return (f'<{objname} "{obj.name.name}" '
+                f'({", ".join(str(a.datatype)
+                    for a in obj.args)}) : {str(obj.returntype)}>')
     return (f'<{obj.__class__.__name__} ' +
-            f'"{obj.name.name}" : {obj.datatype.name}' +
-            (f'={obj.datatype.subtype}>' if obj.datatype.subtype else '>'))
+            f'"{obj.name.name}" : {str(obj.datatype)}>')

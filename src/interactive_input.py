@@ -203,11 +203,10 @@ class InteractiveInput:
                     self.cursor_pos = len(self.text_buf)
 
             elif ch == CTRL_C:
-                sys.stdout.write('^C\n')
+                sys.stdout.write('^C')
                 sys.stdout.flush()
                 raise KeyboardInterrupt from None
             elif ch == CTRL_D:
-                sys.stdout.write('^D\n')
                 sys.stdout.flush()
                 raise EOFError from None
 

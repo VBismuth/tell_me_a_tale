@@ -1,2 +1,2 @@
 mypy==2.3.1
-Nuitka==4.2
+Nuitka==4.2.1

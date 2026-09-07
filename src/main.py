@@ -190,7 +190,7 @@ def app_interactive(app_name: str) -> None:
     print(f'{Colors.FG_BLUE.value}TMT version v{TMT_VERSION}',
           f'This program is licenced under {TMT_LICENSE}',
           'In this mode . or ; will be appended automaticaly '
-          'at the end of line so you don\'t have to put them',
+          'at the end of line so you don\'t have to',
           'Type "dump" to dump your commands to `storyteller_dump.txt`',
           'Type "exit" or CTRL+D to exit the program',
           sep='\n', end=f'{Colors.RESET.value}\n\n')

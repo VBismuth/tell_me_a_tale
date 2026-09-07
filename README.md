@@ -1,4 +1,4 @@
-# ![TMT Logo](tmt_logo.svg "Tell Me a Tale")  Tell Me a Tale
+# ![TMT Logo](assets/tmt_logo.svg "Tell Me a Tale")  Tell Me a Tale
 
 A small programming language designed to be read like a story
 
@@ -30,7 +30,7 @@ Obviously, I don't expect this language to be used in production. I don't even k
 ### Requirements
 * python 3.14
 * mypy 2.3.1 (for type checking only)
-* Nuitka 4.2 (for building)
+* Nuitka 4.2.1 (for building)
 * C compiler (for building, `gcc` or `clang` on Linux or MacOS and `msvc` on Windows)
 
 ### Running tests
@@ -84,16 +84,15 @@ pip install nuitka
 
 Then run sourcse_merger.py, so you'll get a merged source files
 ```shell
-python sourcse_merger.py
+python source_merger.py
 ```
 
 _On Linux_ or _MacOS_ run
 ```shell
-python -m nuitka --onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller build/storyteller.py
+python -m nuitka --onefile --remove-output --output-dir=build --lto=auto --python-flag=-O --output-filename=storyteller build/storyteller.py
 ```
 
 _On Windows_ run
 ```shell
-python -m nuitka --windows-app-icon=assets\tmt_logo.png --msvc=latest --onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller build\storyteller.py
+python -m nuitka --windows-app-icon=assets\tmt_logo.png --lto=auto --msvc=latest --onefile --remove-output --output-dir=build --python-flag=-O --output-filename=storyteller --assume-yes-for-downloads build\storyteller.py
 ```
-Nuitka could prompt for downloading DependencyWalker for onefile building on Windows

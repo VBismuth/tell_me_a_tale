@@ -159,13 +159,17 @@ def fn_the_meaning_of(ctx: ParserContext) -> Expression:
         )
         token_error(tok, ctx.source, f'Name "{tok.body}" is not defined' +
                     (f'. Did you mean "{suggestion}"?' if suggestion else ''))
-        ctx.perror = ParseError.SYNTAXERR
+        ctx.perror = ParseError.PARAMETERERR
         return NOTHING
     if ctx.objects.is_constant(tok.body):
         obj: TmtObject | None = ctx.objects.get(tok.body)
         assert isinstance(obj, Constant), \
             f"Expected constant, but got {type(obj)!r}"
         return Literal(obj.value, obj.datatype)
+    if ctx.objects.is_function(tok.body):
+        token_error(tok, ctx.source,
+                    "'The meaning of' do not accept function identifiers")
+        ctx.perror = ParseError.PARAMETERERR
     end_pos = tok.end_pos
     return GetVar(position=(start_pos, end_pos), target=Identifier(tok.body))
 

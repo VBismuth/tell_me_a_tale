@@ -5,9 +5,9 @@ python source_merger.py
 cd build
 
 python -m nuitka\
-    --mode=app\
-    --company-name=VBismuth\
-    --product-name=Storyteller\
+    --onefile\
+    --lto=auto\
+    --assume-yes-for-downloads\
     --output-dir=.\
     --python-flag=-O\
     --output-filename=storyteller\

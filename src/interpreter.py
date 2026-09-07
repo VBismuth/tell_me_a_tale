@@ -28,7 +28,7 @@ from .ast_ import (
     Variable, Constant,
 )
 from .typecheck import is_valid_type
-from .builtins_ import TMT_BUILTIN_FUNCS, TmtObjectsTrack, TmtObject
+from .builtins_ import TMT_NATIVE_FUNCS, TmtObjectsTrack, TmtObject
 from .utils import get_func_name, suggest_name, tmt_get_self, identifier_info
 
 
@@ -127,13 +127,13 @@ def interp(ctx: RuntimeContext) -> TMTRuntimeError:
         if isinstance(statement, Pass):
             continue
         if isinstance(statement, FunctionCall) and\
-                get_func_name(statement) in TMT_BUILTIN_FUNCS:
+                get_func_name(statement) in TMT_NATIVE_FUNCS:
             # TODO: work with function returns
             args: List[Any] = [interp_expression(ctx, expr)
                                for expr in statement.args]
             if ctx.rerror != TMTRuntimeError.OK:
                 break
-            TMT_BUILTIN_FUNCS[get_func_name(statement)](*args)
+            TMT_NATIVE_FUNCS[get_func_name(statement)](*args)
         else:
             error_message(
                 *ctx.source_pos,

@@ -25,9 +25,10 @@ from typing import (
 from sys import stdout, stderr
 
 from . import TMT_VERSION
+from .text import Pos
 from .ast_ import (
     Constant, Variable, FunctionDefinition, Identifier,
-    DataType, Literal
+    DataType, Literal, Pass
 )
 from .errors import TMTRuntimeError, error_print, warn_print
 
@@ -118,7 +119,8 @@ class TmtObjectsTrack:
 
     def setup_builtins(self) -> None:
         """ Setup builtins to track """
-        for defaults in (TMT_BUILTIN_CONSTS, TMT_BUILTIN_VARS):
+        for defaults in (TMT_BUILTIN_CONSTS, TMT_BUILTIN_VARS,
+                         TMT_BUILTIN_FUNCS):
             for name, obj in defaults.items():
                 if self.check_exists(name):
                     warn_print(f'WARN: TmtObjectsTrack.setup: name "{name}" is'
@@ -165,6 +167,19 @@ TMT_BUILTIN_VARS: Dict[str, Variable] = {
                                 DataType("number", 'u8'),
                                 '0'),
 }
+TMT_BUILTIN_FUNCS: Dict[str, FunctionDefinition] = {
+    "PRINT":       FunctionDefinition(position=(Pos(), Pos()),
+                                      name=Identifier("PRINT"),
+                                      returntype=DataType(),
+                                      args=[Variable(Identifier("FILE"),
+                                                     DataType("text"),
+                                                     "_STUB"),
+                                            Variable(Identifier("TEXT"),
+                                                     DataType("text"),
+                                                     "_STUB"
+                                                     )],
+                                      body=[Pass()]),
+}
 
 NOTHING: Literal = Literal('nothing', DataType())
 NEWLINE: Literal = Literal('\n', DataType('text'))
@@ -184,6 +199,6 @@ def builtin_print(file: str, *args: Any) -> TMTRuntimeError:
     return TMTRuntimeError.OK
 
 
-TMT_BUILTIN_FUNCS: Dict[str, Callable[..., TMTRuntimeError]] = {
+TMT_NATIVE_FUNCS: Dict[str, Callable[..., TMTRuntimeError]] = {
     "PRINT": builtin_print,
 }
