@@ -120,7 +120,7 @@ def app_info(app_name: str) -> None:
 
 def app_translate(app_name: str, target: str) -> None:
     """ Translates target into AST JSON and dumps it """
-    file = check_tmt_file(app_name, target).resolve()
+    file = check_tmt_file(app_name, target, allow_ast=False).resolve()
     source = Text.new(file.read_text('utf8'), str(file))
     tokens = stage_tokenize(app_name, source)
 

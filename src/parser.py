@@ -202,6 +202,7 @@ def process_args(ctx: ParserContext) -> List[Expression]:
 
 def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
     """ Process 'tell' or 'say' printing statements """
+    # pylint: disable=too-many-branches
     res: Node = Pass()
     tok: Token | None = ctx.get_token()
     assert tok is not None, "ERROR: fn_tell_print: expected token, got None"
@@ -262,6 +263,10 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
         ctx.eof()
         return Pass()
     tok = ctx.next_token()
+    while (tok is not None and
+           tok.type_ == TokenType.KEYWORD and
+           tok.body.lower() == 'about'):
+        tok = ctx.next_token()
     while tok and tok.type_ not in (TokenType.TERMINATOR,):
         if not tok:
             break
