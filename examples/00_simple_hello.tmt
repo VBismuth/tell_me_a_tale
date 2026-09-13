@@ -1,0 +1,8 @@
+--- Simple Hello World example ---
+-- This is a comment, it starts with --
+-- Statements 'say' and 'tell me' prints text to the standard output
+-- This line prints hello world. 'Say' appends newline by default
+Say `Hello, World!`.
+
+-- Prints the same, but needs newline at the end
+Tell me `Hello, World!\n`.

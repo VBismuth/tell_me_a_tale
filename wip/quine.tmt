@@ -1,0 +1,9 @@
+--- Quine in TMT ---
+This is "Quine" of kind text that is `
+--- Quine in TMT ---
+This is "Quine" of kind text that is \`QQQ\`;
+Replace text in "Quine" from decode \`#515151\` to the meaning of "Quine".
+Say the meaning of "Quine".
+`;
+Replace text in "Quine" from decode `#515151` to the meaning of "Quine".
+Say the meaning of "Quine".
