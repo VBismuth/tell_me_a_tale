@@ -1,0 +1,26 @@
+--- TMT standard functions ---
+
+--( Reading file in text mode, utf8
+    Args: "File"::text
+    Return: text )--
+This is a tale "Read File" of kind text in wich "File" of kind text.
+So it begins.
+    There was an "Output" of kind text that should listen to the meaning of "File";
+    If _$"ERROR"_ equals to _$"FILE READ ERROR"_; then
+        Tell error `Could not read file '$"File"': $"ERROR MESSAGE"\n`.
+        Quit _$"ERROR"_  -- Builtin variable ERROR is a number=u8
+    That's it.
+    Hand out the meaning of "Output".
+The end.
+
+--( Writing to file in text mode, utf8
+    Args: "File"::text, "Text"::text
+    Return: nil )--
+This is a tale "Write File" in wich "File" of kind text, "Text" of kind text.
+So it begins.
+    Tell "File" the meaning of "Text".
+    If _$"ERROR"_ equals to _$"FILE WRITE ERROR"_; then
+        Tell error `Could not write to file '$"File"': $"ERROR MESSAGE"\n`.
+        Quit _$"ERROR"_
+    That's it.
+The end.

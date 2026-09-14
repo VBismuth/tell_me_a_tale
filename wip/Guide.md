@@ -14,17 +14,17 @@ TMT is a statically typed language with the following types:
 
 | Type | Description | Variants |
 |------|-------------|----------|
-| `number` | Integer types | `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`|
-| `      ` | Floating-point types | `f32`, `f64` (default: `f64`) |
+| `number` | Integer types; Floating-point types | `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`; `f32`, `f64` (default: `f64`) |
 | `text` | String/text | Unicode-aware strings |
 | `boolean` | Logical values | `true`, `false` |
-| `nothing` | Null/void type | `none` |
+| `nothing` | Null/void type, ~ none | NA |
 | `pointer` | Memory reference | Type-safe pointers |
 | `table` | Collection types | Indexed arrays or dictionaries |
 
 ### Design Principles
 
 - **Natural language:** TMT syntax closely resembles prose and natural English sentences.
+- **Case insensitive keywords:** Keywords in TMT ignore case, so `Say`, `sAy` or `say` make the same statements.
 - **Readable:** Programs should read like stories rather than traditional code.
 - **Forgiving:** Non-essential words and formatting are tolerated and discarded during parsing.
 
@@ -177,13 +177,24 @@ This is "My Input" that tells me a tale "_INPUT".
 ### File Operations
 
 
-#### Writing to Files
+#### Reading files
 
 Store a file path as text in a variable for reuse:
 
 ```tmt
 This is "My File" that is `./some/path/file.txt`.
 ```
+
+Read data from file, go to the beginning and then read it again:
+```tmt
+This is "File Data" that should listen to the meaning of "My File".
+Say the meaining of "File Data".
+Seek 0 in "My file".
+Listen to the meaning of "My File", "File Data".
+Say the meaining of "File Data".
+```
+
+#### Writing to Files
 
 Append or create files:
 
