@@ -212,7 +212,7 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
     assert tok is not None, "ERROR: fn_tell_print: expected token, got None"
     fn_root: Token = tok
     res = FunctionCall((tok.start_pos, tok.end_pos),
-                       Identifier("PRINT"), [])
+                       Identifier("_PRINT"), [])
     if output == 'stdout':
         res.args.append(Literal('STDOUT', DataType('text')))
     elif output == 'stderr':

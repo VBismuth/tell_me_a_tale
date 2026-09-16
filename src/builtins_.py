@@ -168,17 +168,17 @@ TMT_BUILTIN_VARS: Dict[str, Variable] = {
                                 '0'),
 }
 TMT_BUILTIN_FUNCS: Dict[str, FunctionDefinition] = {
-    "PRINT":       FunctionDefinition(position=(Pos(), Pos()),
-                                      name=Identifier("PRINT"),
-                                      returntype=DataType(),
-                                      args=[Variable(Identifier("FILE"),
-                                                     DataType("text"),
-                                                     "_STUB"),
-                                            Variable(Identifier("TEXT"),
-                                                     DataType("text"),
-                                                     "_STUB"
-                                                     )],
-                                      body=[Pass()]),
+    "_PRINT":       FunctionDefinition(position=(Pos(), Pos()),
+                                       name=Identifier("_PRINT"),
+                                       returntype=DataType(),
+                                       args=[Variable(Identifier("FILE"),
+                                                      DataType("text"),
+                                                      "_STUB"),
+                                             Variable(Identifier("TEXT"),
+                                                      DataType("text"),
+                                                      "_STUB"
+                                                      )],
+                                       body=[Pass()]),
 }
 
 NOTHING: Literal = Literal('nothing', DataType())
@@ -200,5 +200,5 @@ def builtin_print(file: str, *args: Any) -> TMTRuntimeError:
 
 
 TMT_NATIVE_FUNCS: Dict[str, Callable[..., TMTRuntimeError]] = {
-    "PRINT": builtin_print,
+    "_PRINT": builtin_print,
 }
