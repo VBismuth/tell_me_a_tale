@@ -121,7 +121,7 @@ class LogicOperation:
 class VariableDeclaration:
     """ Variable declaration in TMT. Requires type """
     position: Tuple[Pos, Pos]
-    object: Variable
+    obj: Variable
     assignment: Expression
 
 
@@ -137,7 +137,7 @@ class ConstantDeclaration:
 class VariableAssignment:
     """ Assign variable to expression """
     position: Tuple[Pos, Pos]
-    left: Variable
+    left: Identifier
     right: Expression
 
 

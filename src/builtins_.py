@@ -19,7 +19,7 @@
 
 from dataclasses import dataclass, field
 from typing import (
-    List, Dict, Union, Callable, Any,
+    List, Dict, Tuple, Union, Callable, Any,
     get_args as type_get_args
 )
 from sys import stdout, stderr
@@ -159,6 +159,10 @@ TMT_BUILTIN_CONSTS: Dict[str, Constant] = {
                                  '5'),
 }
 TMT_BUILTIN_VARS: Dict[str, Variable] = {
+    "ANS":             Variable(Identifier("ANS"),
+                                DataType("text"),
+                                ""
+                                ),
     "SELF":            Variable(Identifier("SELF"),
                                 DataType("text"),
                                 "_BUILTIN_SELF"
@@ -179,14 +183,22 @@ TMT_BUILTIN_FUNCS: Dict[str, FunctionDefinition] = {
                                                       "_STUB"
                                                       )],
                                        body=[Pass()]),
+
+    "_INPUT":       FunctionDefinition(position=(Pos(), Pos()),
+                                       name=Identifier("_INPUT"),
+                                       returntype=DataType('text'),
+                                       args=[Variable(Identifier("PROMPT"),
+                                                      DataType("text"),
+                                                      "_STUB")],
+                                       body=[Pass()]),
 }
 
 NOTHING: Literal = Literal('nothing', DataType())
 NEWLINE: Literal = Literal('\n', DataType('text'))
 
 
-def builtin_print(file: str, *args: Any) -> TMTRuntimeError:
-    """ Python print wrapper for TMT builtin PRINT """
+def builtin_print(file: str, *args: Any) -> Tuple[TMTRuntimeError, None]:
+    """ Python print wrapper for TMT builtin _PRINT """
     if not isinstance(file, str) or len(file) < 1:
         file = 'STDOUT'
     if file == "STDOUT":
@@ -196,9 +208,15 @@ def builtin_print(file: str, *args: Any) -> TMTRuntimeError:
     # TODO: check file in system, or make builtin_writefile/readfile
     else:
         raise NotImplementedError
-    return TMTRuntimeError.OK
+    return TMTRuntimeError.OK, None
 
 
-TMT_NATIVE_FUNCS: Dict[str, Callable[..., TMTRuntimeError]] = {
+def builtin_input(prompt: str) -> Tuple[TMTRuntimeError, str]:
+    """ Standard input wrapper for TMT builtin _INPUT """
+    return TMTRuntimeError.OK, input(prompt)
+
+
+TMT_NATIVE_FUNCS: Dict[str, Callable[..., Tuple[TMTRuntimeError, Any]]] = {
     "_PRINT": builtin_print,
+    "_INPUT": builtin_print,
 }

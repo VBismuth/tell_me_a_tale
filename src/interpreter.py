@@ -128,18 +128,22 @@ def interp(ctx: RuntimeContext) -> TMTRuntimeError:
             continue
         if isinstance(statement, FunctionCall) and\
                 get_func_name(statement) in TMT_NATIVE_FUNCS:
-            # TODO: work with function returns
             args: List[Any] = [interp_expression(ctx, expr)
                                for expr in statement.args]
             if ctx.rerror != TMTRuntimeError.OK:
                 break
-            TMT_NATIVE_FUNCS[get_func_name(statement)](*args)
+            res: Tuple[TMTRuntimeError, Any] =\
+                TMT_NATIVE_FUNCS[get_func_name(statement)](*args)
+            ctx.rerror = res[0]
+            ctx.objects.variables[Identifier('ANS')].value = str(res[1])
+
+        # TODO: ADD VariableAssignment
         else:
             error_message(
                 *ctx.source_pos,
                 ctx.source,
                 "ERROR: interpreter: unknown "
-                f"statement {str(statement)!r}"
+                f"statement {statement.__class__.__name__!r}"
             )
             ctx.rerror = TMTRuntimeError.STATEMENTERR
     print(end='', flush=True)  # so builtin_print wont stay unflushed

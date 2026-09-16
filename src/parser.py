@@ -28,7 +28,7 @@ from .ast_ import (
     DataType, Literal, Pass,
     FunctionDefinition, FunctionCall,
     Program, Node, Expression,
-    Statement, GetVar
+    Statement, GetVar, VariableAssignment,
 )
 from .tokens import Token, TokenType
 from .errors import error_print, warn_print, token_error, ParseError
@@ -58,7 +58,7 @@ class ParserContext:
         return self.tokens[self.pointer]
 
     def next_token(self, n: int = 1) -> Token | None:
-        """ Move pointer and return previous n token
+        """ Move pointer and return next n token
         if it exists, None otherwise """
         if self.pointer + n >= len(self.tokens):
             # warn_print("WARN: ParserContext.next: Context next token "
@@ -115,8 +115,7 @@ def concatinate_words(ctx: ParserContext) -> Token:
     tok = ctx.next_token()
     comments: List[Token] = []
     while tok and tok.type_ not in\
-            (TokenType.COMMA, TokenType.TERMINATOR,
-             TokenType.COLON, ):
+            (TokenType.COMMA, TokenType.TERMINATOR,):
         if tok.type_ is TokenType.COMMENT:
             comments.append(tok)
             tok = ctx.next_token()
@@ -186,13 +185,13 @@ def process_args(ctx: ParserContext) -> List[Expression]:
     assert tok is not None, "ERROR: process_args: expected token, got None"
     if tok.body.lower() == 'the meaning of':
         res.append(fn_the_meaning_of(ctx))
+    elif tok.type_ == TokenType.COMMENT:
+        pass
     elif tok.type_ in (TokenType.WORD, TokenType.STRING):
         res.append(Literal(
             concatinate_words(ctx).body,
             DataType('text')
         ))
-    elif tok.type_ == TokenType.STRING:
-        res.append(Literal(tok.body, DataType('text')))
     elif tok.type_ == TokenType.IDENTIFIER:
         res.append(Identifier(tok.body))
     else:
@@ -276,8 +275,69 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
             break
         res.args += process_args(ctx)  # TODO: complete
         res.position = (res.position[0], (ctx.get_token() or tok).end_pos)
+        cur_tok = ctx.get_token()  # make sure to break on termination symbol
+        if cur_tok and cur_tok.type_ == TokenType.TERMINATOR:
+            break
         tok = ctx.next_token()
     return res
+
+
+def fn_should_listen(ctx: ParserContext, mode: str,
+                     prompt: str = '> ') -> Node:
+    """ Standard TMT terminal input """
+    res: Node = Pass()
+    tok: Token | None = ctx.get_token()
+    if tok is None:
+        error_print("ERROR: fn_should_listen: expected token, got None")
+        ctx.perror = ParseError.TOKENERR
+        ctx.next_token()
+        return Pass()
+    res = FunctionCall((tok.start_pos, tok.end_pos),
+                       Identifier("_INPUT"),
+                       [Literal(prompt, DataType('text'))])
+    if mode.lower() == 'indent':
+        tok = ctx.next_token()
+        if tok and tok.type_ == TokenType.COMMA:
+            tok = ctx.next_token()
+        if tok is None:
+            error_print("ERROR: fn_should_listen: expected token, got None")
+            ctx.perror = ParseError.TOKENERR
+            ctx.next_token()
+            return Pass()
+        if tok.type_ != TokenType.IDENTIFIER:
+            token_error(tok, ctx.source,
+                        f"ERROR: expected identifier argument but got {tok}")
+            ctx.perror = ParseError.PARAMETERERR
+            ctx.next_token()
+            return Pass()
+        if not ctx.objects.check_exists(tok.body):
+            suggestion: str | None = suggest_name(
+                tok.body,
+                ctx.objects.names_as_str()
+            )
+            token_error(tok, ctx.source, f'Name "{tok.body}" is not defined' +
+                        (f'. Did you mean "{suggestion}"?'
+                         if suggestion else ''))
+            ctx.perror = ParseError.PARAMETERERR
+            ctx.next_token()
+            return Pass()
+        if ctx.objects.is_constant(tok.body) or\
+                ctx.objects.is_function(tok.body):
+            token_error(tok, ctx.source, f'Cannot write to "{tok.body}: "'
+                        f'this is immutable object, ' +
+                        ('a Constant' if ctx.objects.is_constant(tok.body)
+                         else 'a Function')
+                        )
+            ctx.perror = ParseError.PARAMETERERR
+            ctx.next_token()
+            return Pass()
+    else:
+        raise NotImplementedError
+
+    # TODO: type check
+    ctx.next_token()
+    return VariableAssignment((res.position[0], tok.end_pos),
+                              Identifier(tok.body), res)
 
 
 def process_statements(ctx: ParserContext) -> Node:
@@ -303,11 +363,12 @@ def process_statements(ctx: ParserContext) -> Node:
         res = fn_tell_print(ctx, 'stderr')
     elif tok.body.lower() == "tell":
         tok = ctx.next_token()
-        ctx.prev_token()
         if tok and tok.type_ == TokenType.IDENTIFIER:
             res = fn_tell_print(ctx, 'ident')
         else:
             res = fn_tell_print(ctx, 'path')
+    elif tok.body.lower() == "should listen to me":
+        res = fn_should_listen(ctx, 'indent')
     else:
         token_error(tok, ctx.source,
                     f"Unexpected keyword '{tok.body}'")
