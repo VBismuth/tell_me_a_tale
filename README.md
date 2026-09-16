@@ -70,7 +70,7 @@ There's example for "Hello World" program from shell argument and from file
 ```shell
 storyteller tell "Say Hello World."
 
-storyteller read ./examples/00_hello.tmt
+storyteller read ./examples/00_simple_hello.tmt
 ```
 
 TMT is also a quine. You can get a copy of it's full source code printed in terminal by running
