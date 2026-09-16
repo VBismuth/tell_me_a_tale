@@ -122,8 +122,12 @@ def concatinate_words(ctx: ParserContext) -> Token:
             tok = ctx.next_token()
             continue
         res.end_pos.update(tok.end_pos)
-        res.body = ctx.source.get_slice(res.start_pos, res.end_pos)
         tok = ctx.next_token()
+    res.body = ctx.source\
+        .get_slice(res.start_pos, res.end_pos)\
+        .replace(r'\`', '!!BACKTICK!!')\
+        .replace('`', '')\
+        .replace('!!BACKTICK!!', '`')
     # Clean comments out of the string
     for comm in comments:
         res.body = res.body.replace(comm.body, '')
@@ -182,7 +186,7 @@ def process_args(ctx: ParserContext) -> List[Expression]:
     assert tok is not None, "ERROR: process_args: expected token, got None"
     if tok.body.lower() == 'the meaning of':
         res.append(fn_the_meaning_of(ctx))
-    elif tok.type_ == TokenType.WORD:
+    elif tok.type_ in (TokenType.WORD, TokenType.STRING):
         res.append(Literal(
             concatinate_words(ctx).body,
             DataType('text')

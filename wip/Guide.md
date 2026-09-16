@@ -17,7 +17,7 @@ TMT is a statically typed language with the following types:
 | `number` | Integer types; Floating-point types | `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`; `f32`, `f64` (default: `f64`) |
 | `text` | String/text | Unicode-aware strings |
 | `boolean` | Logical values | `true`, `false` |
-| `nothing` | Null/void type, ~ none | NA |
+| `nothing` | Null/void type, ~ none | `N/A` |
 | `pointer` | Memory reference | Type-safe pointers |
 | `table` | Collection types | Indexed arrays or dictionaries |
 
@@ -48,10 +48,11 @@ TMT is a statically typed language with the following types:
 ### Core Concepts
 
 #### Identifiers
-Variable, constant, and function names are enclosed in double quotes: `"myVariable"`, `"MY_CONSTANT"`, `"sayHello"`.
+Variable, constant, and function names are enclosed in double quotes: `"my variable"`, `"MY CONSTANT"`, `"Say Hello"`.
 
 #### Text and Strings
 Text literals are enclosed in backticks: `` `Hello, world` ``.
+
 
 #### Numbers
 Supported formats: `42`, `-8.9`, `3.14E-12`, `+100`.
@@ -143,7 +144,7 @@ Tell me about "ERROR"\n.        -- Output: <Variable "ERROR" : u8>
 Tell me the meaning of "ERROR"\n.  -- Output: current value
 ```
 
-Note: `about` is optional in the syntax.
+Note: `about` is optional in this case.
 
 ```tmt
 Say "ERROR".
@@ -265,8 +266,8 @@ If $"ERROR" equals to $"FILE_READ_ERROR" then quit $"ERROR".
 
 **Categories:**
 - **Output:** `say`, `tell`
-- **Input:** `listen`
-- **Control:** `if`, `then`, `else/otherwise`, `while`, `for`, `quit`, `return`
+- **Input:** `should listen to me`
+- **Control:** `if`, `then`, `else/otherwise`, `while`, `for`, `quit`, `return/hand out`
 - **Declaration:** `this is`, `that was`, etc.
 - **Types:** `number`, `text`, `boolean`, `nothing`, `pointer`, `table`
 - **Other:** TODO?
@@ -275,11 +276,11 @@ If $"ERROR" equals to $"FILE_READ_ERROR" then quit $"ERROR".
 
 ## Error Codes
 
-| Code | Name | Description |
+| Name | Code | Description |
 |------|------|-------------|
-| `FILE_READ_ERROR` | File read failure | Unable to open or read file |
-| `FILE_WRITE_ERROR` | File write failure | Unable to write to file |
-| `FILE_ERASE_ERROR` | File erase failure | Unable to clear file contents |
+| `NO ERROR` | 0 | Everithing OK |
+| `FILE READ ERROR` | 1 | Unable to open or read file |
+| `FILE WRITE ERROR` | 2 | Unable to write to file |
 | TBD | ... | ... |
 
 ---
