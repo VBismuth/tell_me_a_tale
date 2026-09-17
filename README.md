@@ -17,7 +17,7 @@ Obviously, I don't expect this language to be used in production. I don't even k
 - [x] Base structure for the language
 - [ ] Expressions
 - [ ] Functions
-- [ ] Terminal I/O (1/2)
+- [x] Terminal I/O (WIP)
 - [x] Interpreter
 - [ ] External functions (FFI)
 - [ ] Modules ("Books") and imports
