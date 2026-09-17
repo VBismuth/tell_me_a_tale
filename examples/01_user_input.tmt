@@ -1,6 +1,10 @@
 --- Getting input from user ---
+
 Say `> Hello! Could you introduce yourself?`.
 Tell me `>> Hey, I am `.
-You should listen to me, "ANS".  -- using default variable of text type
+
+-- Getting user input, storing the result in default variable of text type
+You should listen to me, "ANS".
+
 Say `> Welcome, `, the meaning of "ANS", `!`.
 Say `>` It's nice to meet you.
