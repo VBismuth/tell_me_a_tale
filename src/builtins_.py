@@ -218,5 +218,5 @@ def builtin_input(prompt: str) -> Tuple[TMTRuntimeError, str]:
 
 TMT_NATIVE_FUNCS: Dict[str, Callable[..., Tuple[TMTRuntimeError, Any]]] = {
     "_PRINT": builtin_print,
-    "_INPUT": builtin_print,
+    "_INPUT": builtin_input,
 }

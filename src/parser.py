@@ -185,7 +185,7 @@ def process_args(ctx: ParserContext) -> List[Expression]:
     assert tok is not None, "ERROR: process_args: expected token, got None"
     if tok.body.lower() == 'the meaning of':
         res.append(fn_the_meaning_of(ctx))
-    elif tok.type_ == TokenType.COMMENT:
+    elif tok.type_ in (TokenType.COMMENT, TokenType.COMMA):
         pass
     elif tok.type_ in (TokenType.WORD, TokenType.STRING):
         res.append(Literal(
@@ -283,7 +283,7 @@ def fn_tell_print(ctx: ParserContext, output: str | Identifier) -> Node:
 
 
 def fn_should_listen(ctx: ParserContext, mode: str,
-                     prompt: str = '> ') -> Node:
+                     prompt: str = '') -> Node:
     """ Standard TMT terminal input """
     res: Node = Pass()
     tok: Token | None = ctx.get_token()
@@ -323,10 +323,9 @@ def fn_should_listen(ctx: ParserContext, mode: str,
             return Pass()
         if ctx.objects.is_constant(tok.body) or\
                 ctx.objects.is_function(tok.body):
-            token_error(tok, ctx.source, f'Cannot write to "{tok.body}: "'
-                        f'this is immutable object, ' +
-                        ('a Constant' if ctx.objects.is_constant(tok.body)
-                         else 'a Function')
+            token_error(tok, ctx.source, f'Cannot write to "{tok.body}": ' +
+                        ('Constant' if ctx.objects.is_constant(tok.body)
+                         else 'Function') + ' is an immutable object'
                         )
             ctx.perror = ParseError.PARAMETERERR
             ctx.next_token()
@@ -367,7 +366,7 @@ def process_statements(ctx: ParserContext) -> Node:
             res = fn_tell_print(ctx, 'ident')
         else:
             res = fn_tell_print(ctx, 'path')
-    elif tok.body.lower() == "should listen to me":
+    elif "should listen to me" in tok.body.lower():
         res = fn_should_listen(ctx, 'indent')
     else:
         token_error(tok, ctx.source,

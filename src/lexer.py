@@ -30,6 +30,7 @@ from .text import Text, Pos
 
 # !!START!!
 keywords = (
+    'you should listen to me',
     'should listen to me', 'should listen to', 'the meaning of',
     'visit library', 'so it begins', 'tell warning', 'append book',
     'tell error', 'a constant', 'telling me', 'a pointer', 'there was',

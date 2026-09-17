@@ -25,7 +25,7 @@ from .errors import error_message, TMTRuntimeError
 from .ast_ import (
     Program, FunctionCall, Literal,
     DataType, Identifier, Pass, GetVar, Node,
-    Variable, Constant,
+    Variable, Constant, VariableAssignment,
 )
 from .typecheck import is_valid_type
 from .builtins_ import TMT_NATIVE_FUNCS, TmtObjectsTrack, TmtObject
@@ -108,6 +108,16 @@ def interp_expression(ctx: RuntimeContext,
                 if isinstance(expr, GetVar) and
                 isinstance(obj, (Variable, Constant))
                 else identifier_info(target, ctx.objects))
+    if isinstance(expr, FunctionCall) and\
+            get_func_name(expr) in TMT_NATIVE_FUNCS:
+        args: List[Any] = [interp_expression(ctx, st)
+                           for st in expr.args]
+        if ctx.rerror != TMTRuntimeError.OK:
+            return None
+        res: Tuple[TMTRuntimeError, Any] =\
+            TMT_NATIVE_FUNCS[get_func_name(expr)](*args)
+        ctx.rerror = res[0]
+        return res[1]  # TODO: tmt typing
     error_message(
         *ctx.source_pos,
         ctx.source,
@@ -137,7 +147,41 @@ def interp(ctx: RuntimeContext) -> TMTRuntimeError:
             ctx.rerror = res[0]
             ctx.objects.variables[Identifier('ANS')].value = str(res[1])
 
-        # TODO: ADD VariableAssignment
+        elif isinstance(statement, VariableAssignment):
+            if not ctx.objects.check_exists(statement.left):
+                suggestion = suggest_name(statement.left.name,
+                                          ctx.objects.names_as_str())
+                error_message(
+                    *ctx.source_pos,
+                    ctx.source,
+                    f'Unknown name {statement.left.name!r}' +
+                    (f'. Did you mean {suggestion!r}?' if suggestion else '')
+                )
+                ctx.rerror = TMTRuntimeError.STATEMENTERR
+                break
+            if not ctx.objects.is_variable(statement.left):
+                error_message(
+                    *ctx.source_pos,
+                    ctx.source,
+                    'Cannot assign value: '
+                    f'{ctx.objects.get(statement.left).__class__.__name__!r}'
+                    ' is an immutable object'
+                )
+                ctx.rerror = TMTRuntimeError.STATEMENTERR
+                break
+
+            variable = ctx.objects.variables[statement.left]
+            if variable is None:
+                error_message(
+                    *ctx.source_pos,
+                    ctx.source,
+                    "Expected a variable from RuntimeContext, but got None"
+                )
+                ctx.rerror = TMTRuntimeError.RUNTIMEERR
+                break
+            # TODO: tmt typecheck
+            variable.value = str(interp_expression(ctx, statement.right))
+
         else:
             error_message(
                 *ctx.source_pos,

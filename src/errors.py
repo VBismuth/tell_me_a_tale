@@ -68,7 +68,8 @@ class ParseError(Enum):
 class TMTRuntimeError(Enum):
     """ Runtime Errors """
     OK               = 0
-    STATEMENTERR     = RUNTIMEERR_OFFSET
+    RUNTIMEERR       = RUNTIMEERR_OFFSET
+    STATEMENTERR     = iota()
     VALUEERR         = iota()
     FILEEXISTSERR    = iota()
     FILENOTFOUNDERR  = iota()
