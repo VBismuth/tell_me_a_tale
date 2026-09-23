@@ -17,8 +17,8 @@
 
 """ Some utils for working with TMT types """
 
-from .ast_ import DataType, Literal
-from .builtins_ import NOTHING
+from .ast_ import DataType
+from .errors import error_print
 
 # !!START!!
 # Unsigned Integers
@@ -67,36 +67,53 @@ def is_valid_type(val: DataType) -> bool:
     )
 
 
-def value_wrap(val: Literal) -> Literal | None:
-    """ Wrap values if their type is valid, returns None otherwise """
-    if not isinstance(val, Literal) or not is_valid_type(val.valtype):
+def number_wrap(value: str, valtype: DataType) -> str | None:
+    """ Wrap number values if their type is valid, returns None otherwise """
+    if not isinstance(value, str) or not is_valid_type(valtype) or\
+            valtype.name != 'number':
+        error_print(
+            f'ERROR: number_wrap: expected "str" but got {type(value)!r},',
+            f'or not valid type {valtype!r}, expected "number"')
         return None
-    value = val.value
-    valuetype = val.valtype
-    res = Literal(
-        value=value,
-        valtype=DataType(valuetype.name, valuetype.subtype)
-    )
-    if valuetype.name == 'number':
-        if valuetype.subtype is None or valuetype.subtype == 'f64':
-            val_float: float = float(value)
-            res.value = str(val_float)
-        elif valuetype.subtype is None or valuetype.subtype == 'f32':
-            val_float  = float(value)
-            res.value = str(val_float)  # TODO f32 to f64 conversion
-        elif valuetype.subtype == 'u8':
-            val_int: int = int(value) & 0xFF
-            res.value = str(val_int)
-        elif valuetype.subtype == 'u16':
-            val_int = int(value) & 0xFFFF
-            res.value = str(val_int)
-        elif valuetype.subtype == 'u32':
-            val_int = int(value) & 0xFFFFFFFF
-            res.value = str(val_int)
-        elif valuetype.subtype == 'u64':
-            val_int = int(value) & 0xFFFFFFFFFFFFFFFF
-            res.value = str(val_int)
-
-    # TODO: finish
-
+    res = value
+    if valtype.subtype is None or valtype.subtype == 'f64':
+        val_float: float = float(value)
+        val_float = val_float % (MAX_F64 if val_float > 0 else MIN_F64)
+        res = str(val_float)
+    elif valtype.subtype == 'f32':
+        val_float  = float(value)
+        val_float = val_float % (MAX_F32 if val_float > 0 else MIN_F32)
+        res = str(val_float)
+    elif valtype.subtype == 'u8':
+        val_int: int = int(value) & 0xFF
+        res = str(val_int)
+    elif valtype.subtype == 'u16':
+        val_int = int(value) & 0xFFFF
+        res = str(val_int)
+    elif valtype.subtype == 'u32':
+        val_int = int(value) & 0xFFFFFFFF
+        res = str(val_int)
+    elif valtype.subtype == 'u64':
+        val_int = int(value) & 0xFFFFFFFFFFFFFFFF
+        res = str(val_int)
+    elif valtype.subtype == 'i8':
+        val_int = int(value)
+        val_int = val_int % (MAX_I8 if val_int > 0 else MIN_I8)
+        res = str(val_int)
+    elif valtype.subtype == 'i16':
+        val_int = int(value)
+        val_int = val_int % (MAX_I16 if val_int > 0 else MIN_I16)
+        res = str(val_int)
+    elif valtype.subtype == 'i32':
+        val_int = int(value)
+        val_int = val_int % (MAX_I32 if val_int > 0 else MIN_I32)
+        res = str(val_int)
+    elif valtype.subtype == 'i64':
+        val_int = int(value)
+        val_int = val_int % (MAX_I64 if val_int > 0 else MIN_I64)
+        res = str(val_int)
+    else:
+        error_print('ERROR: number_wrap: not a valid subtype: ',
+                    f'{valtype.subtype!r}')
+        return None
     return res
