@@ -18,7 +18,7 @@
 """ Some utils for working with TMT types """
 
 from .ast_ import DataType
-from .errors import error_print
+from .errors import error_print, warn_print
 
 # !!START!!
 # Unsigned Integers
@@ -116,4 +116,27 @@ def number_wrap(value: str, valtype: DataType) -> str | None:
         error_print('ERROR: number_wrap: not a valid subtype: ',
                     f'{valtype.subtype!r}')
         return None
+    return res
+
+
+def is_castable(this: DataType, other: DataType) -> bool:
+    """ Checks if provided type is castable to anther """
+    res: bool = False
+    if not is_valid_type(this) or not is_valid_type(other):
+        warn_print('WARN: is_castable: invalid check {this!r} -> {other!r}')
+        res = False
+    elif this.name == other.name and this.subtype == other.subtype:
+        res = True
+    elif this.name == 'pointer' and other.subtype in (this.subtype, this.name):
+        res = True
+    elif this.name == 'number' and other.name == 'number' and\
+            other.subtype in (None, 'f64'):
+        res = True
+    elif this.name in ('number', 'bool', 'none') and\
+            other.name in ('text', 'number', 'bool'):
+        res = (this.subtype == other.subtype) or\
+            (this.subtype is not None and other.subtype is not None and
+             int(this.subtype[1:]) >= int(other.subtype[1:]))
+    elif this.name == 'text':
+        res = other.name in ('text', 'boolean', 'number')
     return res
